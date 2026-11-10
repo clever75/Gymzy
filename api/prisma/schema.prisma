@@ -69,6 +69,11 @@ model Organization {
   subscriptions       Subscription[]
   subscriptionPeriods SubscriptionPeriod[]
 
+  // Domaine 03
+  transactions   Transaction[]
+  paymentRecords PaymentRecord[]
+  invoices       Invoice[]
+
   @@map("organizations")
 }
 
@@ -145,6 +150,11 @@ model User {
   subscriptionsAsBeneficiary Subscription[]       @relation("SubscriptionBeneficiary")
   agreedPricesSet            Subscription[]       @relation("SubscriptionAgreedPriceSetBy")
   periodsPaid                SubscriptionPeriod[] @relation("PeriodPayer")
+
+  // Domaine 03
+  transactionsAsBeneficiary Transaction[] @relation("TransactionBeneficiary")
+  transactionsPaid          Transaction[] @relation("TransactionPayer")
+  transactionsConfirmed     Transaction[] @relation("TransactionConfirmedBy")
 
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
@@ -268,7 +278,7 @@ model SubscriptionPeriod {
   endDate        DateTime?
   catalogPrice   Int
   amount         Int
-  transactionId  String?            @unique // FK vers transactions ajoutée au domaine 03
+  transactionId  String?            @unique
   consumedAt     DateTime?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
@@ -276,9 +286,123 @@ model SubscriptionPeriod {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
   payer        User         @relation("PeriodPayer", fields: [payerUserId], references: [id], onDelete: Restrict)
+  transaction  Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, endDate])
   @@index([subscriptionId])
   @@index([payerUserId])
   @@map("subscription_periods")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 03 · Paiement & facturation
+// ─────────────────────────────────────────────
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  FIRST_SUBSCRIPTION
+  RENEWAL
+  PER_SESSION
+  EVENT_TICKET
+}
+
+enum PaymentProvider {
+  KKIAPAY
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  CARD
+}
+
+// Valeurs à confirmer avec l'équipe (non retrouvées dans la doc de référence)
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Transaction {
+  id                String            @id @default(uuid())
+  organizationId    String
+  beneficiaryUserId String
+  payerUserId       String?
+  amountOriginal    Int
+  discount          Int               @default(0)
+  amountFinal       Int
+  status            TransactionStatus
+  type              TransactionType
+  provider          PaymentProvider?
+  paymentMethod     PaymentMethod
+  providerReference String?
+  confirmedByUserId String?
+  confirmedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  beneficiary        User                @relation("TransactionBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Restrict)
+  payer              User?               @relation("TransactionPayer", fields: [payerUserId], references: [id], onDelete: Restrict)
+  confirmedBy        User?               @relation("TransactionConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: Restrict)
+  subscriptionPeriod SubscriptionPeriod?
+  paymentRecords     PaymentRecord[]
+  invoice            Invoice?
+
+  @@unique([organizationId, providerReference])
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([beneficiaryUserId])
+  @@index([payerUserId])
+  @@index([confirmedByUserId])
+  @@map("transactions")
+}
+
+model PaymentRecord {
+  id             String        @id @default(uuid())
+  organizationId String
+  transactionId  String
+  amount         Int
+  status         PaymentStatus
+  requestRaw     String?
+  responseRaw    String?
+  callbackRaw    String?
+  deviceInfo     String?
+  mobileNetwork  String?
+  cardType       String?
+  phone          String?
+  reference      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  transaction  Transaction  @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([transactionId])
+  @@map("payment_records")
+}
+
+model Invoice {
+  id             String   @id @default(uuid())
+  organizationId String
+  transactionId  String   @unique
+  number         String
+  issuedAt       DateTime
+  pdfUrl         String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  transaction  Transaction  @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@map("invoices")
 }
