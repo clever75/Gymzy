@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,137 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// Domaine 01 · Organisation & identité
+// ─────────────────────────────────────────────
+
+enum OrganizationType {
+  GYM
+  MULTI_ACTIVITY
+}
+
+enum MediaValidationMode {
+  AUTOMATIC
+  MANUAL
+}
+
+enum UserRole {
+  PLATFORM_ADMIN
+  ORG_ADMIN
+  STAFF
+  COACH
+  CLIENT
+  PARENT
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+model Organization {
+  id                String           @id @default(uuid())
+  name              String
+  slug              String           @unique
+  type              OrganizationType
+  contactFirstName  String?
+  contactLastName   String?
+  contactEmail      String?
+  contactPhone      String?
+  address           String?
+  logoUrl           String?
+  publicDescription String?
+  primaryColor      String?
+  secondaryColor    String?
+  apiTokenHash      String?          @unique
+  currentApiTokenId String?          @unique
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  settings        OrganizationSettings?
+  apiTokens       ApiToken[]            @relation("OrganizationTokens")
+  currentApiToken ApiToken?             @relation("CurrentToken", fields: [currentApiTokenId], references: [id], onDelete: SetNull)
+  users           User[]
+
+  @@map("organizations")
+}
+
+model OrganizationSettings {
+  id                                String              @id @default(uuid())
+  organizationId                    String              @unique
+  minAgeYears                       Int?
+  maxActiveSubscriptionsPerActivity Int?                @default(1)
+  currency                          String              @default("XOF")
+  gracePeriodDays                   Int                 @default(3)
+  mediaValidationMode               MediaValidationMode
+  createdAt                         DateTime            @default(now())
+  updatedAt                         DateTime            @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_settings")
+}
+
+model ApiToken {
+  id             String    @id @default(uuid())
+  organizationId String
+  label          String
+  tokenHash      String    @unique
+  issuedAt       DateTime
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  lastUsedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization  @relation("OrganizationTokens", fields: [organizationId], references: [id])
+  currentFor   Organization? @relation("CurrentToken")
+
+  @@index([organizationId])
+  @@map("api_tokens")
+}
+
+model User {
+  id                   String     @id @default(uuid())
+  organizationId       String?
+  role                 UserRole
+  status               UserStatus
+  guardianId           String?
+  coachId              String?
+  createdByUserId      String?
+  firstName            String
+  lastName             String
+  email                String?
+  phone                String?
+  passwordHash         String?
+  photoUrl             String?
+  canLogin             Boolean    @default(true)
+  mustChangePassword   Boolean    @default(false)
+  birthDate            DateTime?
+  category             String?
+  heightCm             Int?
+  weightKg             Float?
+  goalType             String?
+  imageRightsConsent   Boolean    @default(false)
+  imageRightsConsentBy String?
+  imageRightsConsentAt DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  guardian     User?         @relation("UserGuardian", fields: [guardianId], references: [id], onDelete: SetNull)
+  dependents   User[]        @relation("UserGuardian")
+  coach        User?         @relation("UserCoach", fields: [coachId], references: [id], onDelete: SetNull)
+  coachedUsers User[]        @relation("UserCoach")
+  createdBy    User?         @relation("UserCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdUsers User[]        @relation("UserCreatedBy")
+
+  @@unique([organizationId, email])
+  @@unique([organizationId, phone])
+  @@index([organizationId])
+  @@index([guardianId])
+  @@index([coachId])
+  @@map("users")
 }
