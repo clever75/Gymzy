@@ -78,6 +78,10 @@ model Organization {
   events  Event[]
   tickets Ticket[]
 
+  // Domaine 05
+  mediaPosts          MediaPost[]
+  mediaTagValidations MediaTagValidation[]
+
   @@map("organizations")
 }
 
@@ -165,6 +169,12 @@ model User {
   ticketsPurchased     Ticket[] @relation("TicketPurchaser")
   ticketsCheckedIn     Ticket[] @relation("TicketCheckedInBy")
 
+  // Domaine 05
+  mediaPostsAuthored  MediaPost[]          @relation("MediaPostAuthor")
+  mediaPostsPublished MediaPost[]          @relation("MediaPostPublisher")
+  mediaTagsReceived   MediaTagValidation[] @relation("MediaTagTagged")
+  mediaTagsToValidate MediaTagValidation[] @relation("MediaTagValidator")
+
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
   @@index([organizationId])
@@ -216,6 +226,7 @@ model Activity {
   parent       Activity?             @relation("ActivityParent", fields: [parentActivityId], references: [id], onDelete: Restrict)
   children     Activity[]            @relation("ActivityParent")
   formulas     SubscriptionFormula[]
+  mediaPosts   MediaPost[]
 
   @@index([organizationId])
   @@index([parentActivityId])
@@ -485,4 +496,70 @@ model Ticket {
   @@index([purchaserUserId])
   @@index([transactionId])
   @@map("tickets")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 05 · Espace média
+// ─────────────────────────────────────────────
+
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+enum MediaValidationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model MediaPost {
+  id                         String    @id @default(uuid())
+  organizationId             String
+  activityId                 String?
+  title                      String
+  body                       String?
+  // Clés de stockage (chemins), jamais des liens signés : ceux-ci expirent
+  mediaUrls                  String[]  @default([])
+  mediaType                  MediaType
+  authorUserId               String
+  isPublic                   Boolean   @default(false)
+  publishedAt                DateTime?
+  publishedByUserId          String?
+  publishedOverridingConsent Boolean   @default(false)
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  activity       Activity?            @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  author         User                 @relation("MediaPostAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  publishedBy    User?                @relation("MediaPostPublisher", fields: [publishedByUserId], references: [id], onDelete: Restrict)
+  tagValidations MediaTagValidation[]
+
+  @@index([organizationId, isPublic, publishedAt])
+  @@index([organizationId, activityId])
+  @@index([authorUserId])
+  @@map("media_posts")
+}
+
+model MediaTagValidation {
+  id              String                @id @default(uuid())
+  organizationId  String
+  mediaPostId     String
+  taggedUserId    String
+  validatorUserId String
+  status          MediaValidationStatus @default(PENDING)
+  createdAt       DateTime              @default(now())
+  validatedAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  mediaPost    MediaPost    @relation(fields: [mediaPostId], references: [id], onDelete: Restrict)
+  taggedUser   User         @relation("MediaTagTagged", fields: [taggedUserId], references: [id], onDelete: Restrict)
+  validator    User         @relation("MediaTagValidator", fields: [validatorUserId], references: [id], onDelete: Restrict)
+
+  @@unique([mediaPostId, taggedUserId])
+  @@index([organizationId])
+  @@index([taggedUserId])
+  @@index([validatorUserId, status])
+  @@map("media_tag_validations")
 }
