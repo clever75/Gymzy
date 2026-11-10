@@ -63,6 +63,12 @@ model Organization {
   currentApiToken ApiToken?             @relation("CurrentToken", fields: [currentApiTokenId], references: [id], onDelete: SetNull)
   users           User[]
 
+  // Domaine 02
+  activities          Activity[]
+  formulas            SubscriptionFormula[]
+  subscriptions       Subscription[]
+  subscriptionPeriods SubscriptionPeriod[]
+
   @@map("organizations")
 }
 
@@ -135,10 +141,144 @@ model User {
   createdBy    User?         @relation("UserCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   createdUsers User[]        @relation("UserCreatedBy")
 
+  // Domaine 02
+  subscriptionsAsBeneficiary Subscription[]       @relation("SubscriptionBeneficiary")
+  agreedPricesSet            Subscription[]       @relation("SubscriptionAgreedPriceSetBy")
+  periodsPaid                SubscriptionPeriod[] @relation("PeriodPayer")
+
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
   @@index([organizationId])
   @@index([guardianId])
   @@index([coachId])
   @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 02 · Activités, formules & abonnements
+// ─────────────────────────────────────────────
+
+enum FormulaBillingType {
+  SUBSCRIPTION
+  PER_SESSION
+}
+
+enum BillingPeriod {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum SubscriptionCloseReason {
+  FORMULA_CHANGED
+  CANCELLED_BY_ADMIN
+  PAYMENT_ABANDONED
+}
+
+model Activity {
+  id               String   @id @default(uuid())
+  organizationId   String
+  parentActivityId String?
+  name             String
+  description      String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent       Activity?             @relation("ActivityParent", fields: [parentActivityId], references: [id], onDelete: Restrict)
+  children     Activity[]            @relation("ActivityParent")
+  formulas     SubscriptionFormula[]
+
+  @@index([organizationId])
+  @@index([parentActivityId])
+  @@map("activities")
+}
+
+model SubscriptionFormula {
+  id                 String             @id @default(uuid())
+  organizationId     String
+  activityId         String
+  name               String
+  price              Int
+  billingType        FormulaBillingType
+  billingPeriod      BillingPeriod?
+  sessionsPerWeek    Int?
+  sessionsPerMonth   Int?
+  durationDays       Int
+  applicableCategory String?
+  isPopular          Boolean            @default(false)
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  activity      Activity       @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  subscriptions Subscription[]
+
+  @@index([organizationId])
+  @@index([activityId])
+  @@map("subscription_formulas")
+}
+
+model Subscription {
+  id                       String                   @id @default(uuid())
+  organizationId           String
+  beneficiaryUserId        String
+  formulaId                String
+  status                   SubscriptionStatus
+  agreedPrice              Int?
+  agreedPriceSetByUserId   String?
+  agreedPriceSetAt         DateTime?
+  closedAt                 DateTime?
+  closeReason              SubscriptionCloseReason?
+  replacedBySubscriptionId String?                  @unique
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  organization     Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  beneficiary      User                 @relation("SubscriptionBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Restrict)
+  formula          SubscriptionFormula  @relation(fields: [formulaId], references: [id], onDelete: Restrict)
+  agreedPriceSetBy User?                @relation("SubscriptionAgreedPriceSetBy", fields: [agreedPriceSetByUserId], references: [id], onDelete: SetNull)
+  replacedBy       Subscription?        @relation("SubscriptionReplacement", fields: [replacedBySubscriptionId], references: [id], onDelete: Restrict)
+  replaces         Subscription?        @relation("SubscriptionReplacement")
+  periods          SubscriptionPeriod[]
+
+  @@index([organizationId, status])
+  @@index([beneficiaryUserId])
+  @@index([formulaId])
+  @@map("subscriptions")
+}
+
+model SubscriptionPeriod {
+  id             String             @id @default(uuid())
+  organizationId String
+  subscriptionId String
+  payerUserId    String
+  status         SubscriptionStatus
+  startDate      DateTime?
+  endDate        DateTime?
+  catalogPrice   Int
+  amount         Int
+  transactionId  String?            @unique // FK vers transactions ajoutée au domaine 03
+  consumedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  payer        User         @relation("PeriodPayer", fields: [payerUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, endDate])
+  @@index([subscriptionId])
+  @@index([payerUserId])
+  @@map("subscription_periods")
 }
