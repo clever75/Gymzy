@@ -74,6 +74,10 @@ model Organization {
   paymentRecords PaymentRecord[]
   invoices       Invoice[]
 
+  // Domaine 04
+  events  Event[]
+  tickets Ticket[]
+
   @@map("organizations")
 }
 
@@ -155,6 +159,11 @@ model User {
   transactionsAsBeneficiary Transaction[] @relation("TransactionBeneficiary")
   transactionsPaid          Transaction[] @relation("TransactionPayer")
   transactionsConfirmed     Transaction[] @relation("TransactionConfirmedBy")
+
+  // Domaine 04
+  ticketsAsBeneficiary Ticket[] @relation("TicketBeneficiary")
+  ticketsPurchased     Ticket[] @relation("TicketPurchaser")
+  ticketsCheckedIn     Ticket[] @relation("TicketCheckedInBy")
 
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
@@ -355,6 +364,7 @@ model Transaction {
   subscriptionPeriod SubscriptionPeriod?
   paymentRecords     PaymentRecord[]
   invoice            Invoice?
+  tickets            Ticket[]
 
   @@unique([organizationId, providerReference])
   @@index([organizationId, createdAt])
@@ -405,4 +415,74 @@ model Invoice {
   @@unique([organizationId, number])
   @@index([organizationId])
   @@map("invoices")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 04 · Billetterie
+// ─────────────────────────────────────────────
+
+enum EventStatus {
+  DRAFT
+  OPEN
+  FULL
+  FINISHED
+}
+
+enum TicketStatus {
+  RESERVED
+  PAID
+  CHECKED_IN
+  CANCELLED
+}
+
+model Event {
+  id             String      @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+  imageUrl       String?
+  startDate      DateTime
+  endDate        DateTime
+  capacity       Int?
+  ticketPrice    Int
+  status         EventStatus @default(DRAFT)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  tickets      Ticket[]
+
+  @@index([organizationId, status])
+  @@map("events")
+}
+
+model Ticket {
+  id                String       @id @default(uuid())
+  organizationId    String
+  eventId           String
+  beneficiaryUserId String
+  purchaserUserId   String
+  status            TicketStatus
+  qrToken           String       @unique
+  transactionId     String?
+  reservedUntil     DateTime?
+  checkedInAt       DateTime?
+  checkedInByUserId String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  event        Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  beneficiary  User         @relation("TicketBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Restrict)
+  purchaser    User         @relation("TicketPurchaser", fields: [purchaserUserId], references: [id], onDelete: Restrict)
+  checkedInBy  User?        @relation("TicketCheckedInBy", fields: [checkedInByUserId], references: [id], onDelete: Restrict)
+  transaction  Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([eventId, status])
+  @@index([status, reservedUntil])
+  @@index([organizationId])
+  @@index([beneficiaryUserId])
+  @@index([purchaserUserId])
+  @@index([transactionId])
+  @@map("tickets")
 }
