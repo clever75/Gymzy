@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* ───────── COUCHE 1 : palette brute ───────── */
+:root {
+  --gz-ink-950: #100f14;
+  --gz-ink-900: #1a1921;
+  --gz-ink-800: #25222d;
+  --gz-lime-400: #c8f542; /* valeur lue dans le code de la maquette (--ac) */
+  --gz-white: #fefefe;
+  --gz-green-400: #7be289;
+  --gz-olive-800: #414827;
+
+  /* ───────── COUCHE 2 : rôles ───────── */
+  --background: var(--gz-ink-950);
+  --surface: var(--gz-ink-900);
+  --surface-raised: var(--gz-ink-800);
+  --border: var(--gz-ink-800);
+  --primary: var(--gz-lime-400);
+  --on-primary: var(--gz-ink-950);
+  --foreground: var(--gz-white);
+  --success: var(--gz-green-400);
+  --info-surface: var(--gz-olive-800);
+
+  color-scheme: dark;
+}
+
+/* ───────── Pont vers Tailwind ───────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-foreground: var(--foreground);
+  --color-success: var(--success);
+  --color-info-surface: var(--info-surface);
+
+  --font-sans: var(--font-app), system-ui, sans-serif;
+  --font-display: var(--font-display), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Titres : Bricolage ExtraBold, resserré comme sur la maquette */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
