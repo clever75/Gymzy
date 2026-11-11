@@ -54,22 +54,28 @@
   --color-danger-surface: var(--danger-surface);
   --color-info-surface: var(--info-surface);
 
-  --font-sans: var(--font-app), system-ui, sans-serif;
-  --font-display: var(--font-display), system-ui, sans-serif;
+  /* Les variables --font-figtree et --font-bricolage sont créées par next/font
+     dans layout.tsx. Ici on leur donne un rôle (texte courant, titres). */
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-}
+/* Styles par défaut : dans @layer base, pour qu'une classe Tailwind
+   (font-medium, tracking-wide…) puisse les surcharger. */
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
 
-/* Titres : Bricolage ExtraBold, resserré comme sur la maquette */
-h1,
-h2,
-h3 {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.015em;
+  /* Titres : Bricolage ExtraBold, resserré comme sur la maquette */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
 }
