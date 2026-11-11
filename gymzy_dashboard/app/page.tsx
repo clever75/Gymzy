@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button"
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 p-8">
@@ -25,9 +26,15 @@ export default function Home() {
         surface.
       </div>
 
-      <button className="w-fit rounded-xl bg-primary px-5 py-2.5 font-bold text-on-primary">
-        Bouton principal
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+  <Button>Principal</Button>
+  <Button variant="outline">Contour</Button>
+  <Button variant="ghost">Discret</Button>
+  <Button variant="danger">Supprimer</Button>
+  <Button size="sm">Petit</Button>
+  <Button size="lg">Grand</Button>
+  <Button disabled>Désactivé</Button>
+</div>
     </main>
   );
 }
