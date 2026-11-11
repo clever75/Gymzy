@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 p-8">
@@ -34,6 +35,16 @@ export default function Home() {
   <Button size="lg">Grand</Button>
   <Button disabled>Désactivé</Button>
 </div>
+<Card>
+  <CardHeader>
+    <CardTitle>Ama Kofi</CardTitle>
+    <Badge variant="success">Actif</Badge>
+  </CardHeader>
+  <p className="text-foreground-muted">Musculation · Mensuel · 12 000 F</p>
+  <div className="mt-4">
+    <Button size="sm">Renouveler</Button>
+  </div>
+</Card>
     </main>
   );
 }
