@@ -4,14 +4,14 @@ import "./globals.css";
 
 // Titres : confirmée sur la maquette (Bricolage Grotesque ExtraBold).
 const displayFont = Bricolage_Grotesque({
-  variable: "--font-display",
+  variable: "--font-bricolage",
   subsets: ["latin"],
   axes: ["opsz"],
 });
 
 // Texte courant : confirmée sur la maquette (Figtree).
 const bodyFont = Figtree({
-  variable: "--font-app",
+  variable: "--font-figtree",
   subsets: ["latin"],
 });
 
