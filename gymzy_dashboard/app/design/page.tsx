@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
+import { formatDate, formatFcfa } from "@/lib/format";
 
 function Section({
   title,
@@ -24,8 +25,8 @@ export default function DesignPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl">Gymzy · catalogue des composants</h1>
         <p className="text-foreground-muted">
-          Page de référence du socle UI : couleurs, boutons, badges, cartes et
-          champs.
+          Page de référence du socle UI : couleurs, boutons, badges, cartes,
+          champs et formats d&apos;affichage.
         </p>
       </header>
 
@@ -78,7 +79,7 @@ export default function DesignPage() {
             <Badge variant="success">Actif</Badge>
           </CardHeader>
           <p className="text-foreground-muted">
-            Musculation · Mensuel · 12 000 F
+            Musculation · Mensuel · {formatFcfa(12000)}
           </p>
           <div className="mt-4">
             <Button size="sm">Renouveler</Button>
@@ -98,6 +99,21 @@ export default function DesignPage() {
             />
             <Field label="Champ désactivé" disabled defaultValue="Non modifiable" />
           </div>
+        </Card>
+      </Section>
+
+      <Section title="Formats (montants et dates)">
+        <Card>
+          <ul className="flex flex-col gap-2 text-sm">
+            <li>formatFcfa(12000) → {formatFcfa(12000)}</li>
+            <li>formatFcfa(1245000) → {formatFcfa(1245000)}</li>
+            <li>formatFcfa(0) → {formatFcfa(0)}</li>
+            <li>formatFcfa(15000.6) → {formatFcfa(15000.6)}</li>
+            <li>formatFcfa(NaN) → {formatFcfa(NaN)}</li>
+            <li>formatDate(&quot;2026-10-28&quot;) → {formatDate("2026-10-28")}</li>
+            <li>formatDate(&quot;2026-09-28&quot;) → {formatDate("2026-09-28")}</li>
+            <li>formatDate(&quot;n&apos;importe quoi&quot;) → {formatDate("n'importe quoi")}</li>
+          </ul>
         </Card>
       </Section>
     </main>
