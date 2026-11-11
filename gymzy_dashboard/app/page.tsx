@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 p-8">
@@ -10,15 +11,13 @@ export default function Home() {
       </p>
 
       <div className="flex flex-wrap gap-2 text-xs font-bold">
-        <span className="rounded-full bg-success-surface px-3 py-1 text-success">
-          Actif
-        </span>
-        <span className="rounded-full bg-warning-surface px-3 py-1 text-warning">
-          En attente
-        </span>
-        <span className="rounded-full bg-danger-surface px-3 py-1 text-danger">
-          Expiré
-        </span>
+        <div className="flex flex-wrap gap-2">
+  <Badge variant="success">Actif</Badge>
+  <Badge variant="warning">En attente</Badge>
+  <Badge variant="danger">Expiré</Badge>
+  <Badge variant="info">Nouveau</Badge>
+  <Badge>Brouillon</Badge>
+</div>
       </div>
 
       <div className="rounded-[18px] bg-info-surface px-3.5 py-3 text-[13.5px]">
