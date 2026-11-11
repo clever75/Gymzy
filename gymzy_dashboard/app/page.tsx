@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field } from "@/components/ui/field"
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 p-8">
@@ -43,6 +44,17 @@ export default function Home() {
   <p className="text-foreground-muted">Musculation · Mensuel · 12 000 F</p>
   <div className="mt-4">
     <Button size="sm">Renouveler</Button>
+  </div>
+</Card>
+<Card>
+  <CardHeader>
+    <CardTitle>Nouveau membre</CardTitle>
+  </CardHeader>
+  <div className="flex flex-col gap-4">
+    <Field label="Prénom" placeholder="Ama" />
+    <Field label="Téléphone" placeholder="+228 90 12 34 56" />
+    <Field label="Email" error="Adresse email invalide" defaultValue="ama@" />
+    <Field label="Champ désactivé" disabled defaultValue="Non modifiable" />
   </div>
 </Card>
     </main>
