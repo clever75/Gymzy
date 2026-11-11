@@ -90,6 +90,11 @@ model Organization {
   gymExerciseSessionEntries      GymExerciseSessionEntry[]
   gymBodyMeasurements            GymBodyMeasurement[]
 
+  // Domaine 07
+  notifications Notification[]
+  deviceTokens  DeviceToken[]
+  otpCodes      OtpCode[]
+
   @@map("organizations")
 }
 
@@ -188,6 +193,11 @@ model User {
   gymSessionParticipations    GymExerciseSessionParticipant[]
   gymBodyMeasurements         GymBodyMeasurement[]            @relation("GymMeasurementSubject")
   gymBodyMeasurementsRecorded GymBodyMeasurement[]            @relation("GymMeasurementRecorder")
+
+  // Domaine 07
+  notifications Notification[]
+  deviceTokens  DeviceToken[]
+  otpCodes      OtpCode[]
 
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
@@ -706,4 +716,89 @@ model GymBodyMeasurement {
   @@index([organizationId])
   @@index([recordedByUserId])
   @@map("gym_body_measurements")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 07 · Notifications, appareils & OTP
+// ─────────────────────────────────────────────
+
+enum DeviceType {
+  ANDROID
+  IOS
+}
+
+enum OtpPurpose {
+  LOGIN
+  FIRST_LOGIN
+  PASSWORD_RESET
+}
+
+model Notification {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  // Ex. session_reminder, birthday, payment_confirmed
+  eventType      String
+  title          String
+  body           String
+  // Élément concerné (CHECK : les deux ensemble ou aucun des deux)
+  entityType     String?
+  entityId       String?
+  // Données structurées de la notification, pas un fourre-tout de configuration
+  metadata       Json?
+  // Anti-doublon des rappels : ex. "subscription_reminder:<periodId>:J-7"
+  dedupKey       String?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, dedupKey])
+  @@index([userId, isRead, createdAt])
+  @@index([organizationId])
+  @@map("notifications")
+}
+
+model DeviceToken {
+  id             String     @id @default(uuid())
+  organizationId String
+  userId         String
+  // Un jeton = une seule ligne ; réattribuée si un autre compte l'enregistre
+  token          String     @unique
+  deviceType     DeviceType
+  deviceName     String?
+  appVersion     String?
+  // false = jeton mort ou déconnecté, la ligne est conservée
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, isActive])
+  @@index([organizationId])
+  @@map("device_tokens")
+}
+
+model OtpCode {
+  id             String     @id @default(uuid())
+  // Nul pour un administrateur plateforme, comme User.organizationId
+  organizationId String?
+  userId         String
+  // Jamais le code en clair
+  codeHash       String
+  purpose        OtpPurpose
+  attempts       Int        @default(0)
+  expiresAt      DateTime
+  createdAt      DateTime   @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, purpose])
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@map("otp_codes")
 }
