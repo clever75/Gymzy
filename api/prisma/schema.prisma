@@ -95,6 +95,10 @@ model Organization {
   deviceTokens  DeviceToken[]
   otpCodes      OtpCode[]
 
+  // Domaine 08
+  membershipCards MembershipCard[]
+  accessLogs      AccessLog[]
+
   @@map("organizations")
 }
 
@@ -199,6 +203,11 @@ model User {
   deviceTokens  DeviceToken[]
   otpCodes      OtpCode[]
 
+  // Domaine 08
+  membershipCards MembershipCard[]
+  accessLogs      AccessLog[]      @relation("AccessLogUser")
+  accessScans     AccessLog[]      @relation("AccessLogScannedBy")
+
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
   @@index([organizationId])
@@ -251,6 +260,7 @@ model Activity {
   children     Activity[]            @relation("ActivityParent")
   formulas     SubscriptionFormula[]
   mediaPosts   MediaPost[]
+  accessLogs   AccessLog[]
 
   @@index([organizationId])
   @@index([parentActivityId])
@@ -331,6 +341,7 @@ model SubscriptionPeriod {
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
   payer        User         @relation("PeriodPayer", fields: [payerUserId], references: [id], onDelete: Restrict)
   transaction  Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  accessLogs   AccessLog[]
 
   @@index([organizationId, endDate])
   @@index([subscriptionId])
@@ -801,4 +812,65 @@ model OtpCode {
   @@index([organizationId])
   @@index([expiresAt])
   @@map("otp_codes")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 08 · Carte d'adhésion & contrôle d'accès
+// ─────────────────────────────────────────────
+
+enum AccessResult {
+  ALLOWED
+  WARNING
+  DENIED
+}
+
+// Pas de contrainte unique sur userId : une carte perdue est révoquée (revokedAt)
+// et remplacée par une nouvelle ligne. L'unicité de la carte ACTIVE par personne
+// est garantie par un index unique partiel écrit à la main dans la migration
+// (Prisma ne sait pas décrire un index partiel).
+model MembershipCard {
+  id             String    @id @default(uuid())
+  organizationId String
+  userId         String
+  cardNumber     String    @unique
+  // Jeton signé par le serveur (HMAC) : encode salle, personne et numéro de carte
+  signedToken    String
+  issuedAt       DateTime  @default(now())
+  // Nul = carte active
+  revokedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("membership_cards")
+}
+
+model AccessLog {
+  id                   String       @id @default(uuid())
+  organizationId       String
+  // Nul si le code scanné est inconnu ou falsifié (le résultat est alors DENIED)
+  userId               String?
+  scannedByUserId      String
+  // Point d'accès : texte libre pour le MVP
+  gate                 String?
+  // Vert = ALLOWED, orange = WARNING (délai de grâce, quota dépassé), rouge = DENIED
+  result               AccessResult
+  activityId           String?
+  subscriptionPeriodId String?
+  scannedAt            DateTime     @default(now())
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user               User?               @relation("AccessLogUser", fields: [userId], references: [id], onDelete: Restrict)
+  scannedBy          User                @relation("AccessLogScannedBy", fields: [scannedByUserId], references: [id], onDelete: Restrict)
+  activity           Activity?           @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  subscriptionPeriod SubscriptionPeriod? @relation(fields: [subscriptionPeriodId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, scannedAt])
+  @@index([userId, scannedAt])
+  @@index([scannedByUserId])
+  @@index([activityId])
+  @@index([subscriptionPeriodId])
+  @@map("membership_cards_access_logs")
 }
