@@ -1,25 +1,37 @@
 @import "tailwindcss";
 
-/* ───────── COUCHE 1 : palette brute ───────── */
+/* ───────── COUCHE 1 : palette brute (valeurs lues dans le code de la maquette) ───────── */
 :root {
-  --gz-ink-950: #100f14;
-  --gz-ink-900: #1a1921;
-  --gz-ink-800: #25222d;
-  --gz-lime-400: #c8f542; /* valeur lue dans le code de la maquette (--ac) */
-  --gz-white: #fefefe;
-  --gz-green-400: #7be289;
-  --gz-olive-800: #414827;
+  --gz-ink-950: #111014;
+  --gz-ink-900: #1b1922;
+  --gz-ink-800: #26232e;
+  --gz-ink-700: #2e2b36;
+  --gz-lime-400: #c8f542;
+  --gz-white: #f5f3f8;
+  --gz-grey-400: #ada8b9;
+  --gz-green-400: #7ce38b;
+  --gz-green-900: #17351f;
+  --gz-amber-400: #f5c04e;
+  --gz-amber-900: #3a2c0e;
+  --gz-red-300: #ff8a80;
+  --gz-red-900: #3f1a1a;
 
   /* ───────── COUCHE 2 : rôles ───────── */
   --background: var(--gz-ink-950);
   --surface: var(--gz-ink-900);
   --surface-raised: var(--gz-ink-800);
-  --border: var(--gz-ink-800);
+  --border: var(--gz-ink-700);
   --primary: var(--gz-lime-400);
   --on-primary: var(--gz-ink-950);
   --foreground: var(--gz-white);
+  --foreground-muted: var(--gz-grey-400);
   --success: var(--gz-green-400);
-  --info-surface: var(--gz-olive-800);
+  --success-surface: var(--gz-green-900);
+  --warning: var(--gz-amber-400);
+  --warning-surface: var(--gz-amber-900);
+  --danger: var(--gz-red-300);
+  --danger-surface: var(--gz-red-900);
+  --info-surface: color-mix(in srgb, var(--primary) 14%, var(--surface));
 
   color-scheme: dark;
 }
@@ -33,7 +45,13 @@
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
   --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
   --color-info-surface: var(--info-surface);
 
   --font-sans: var(--font-app), system-ui, sans-serif;
