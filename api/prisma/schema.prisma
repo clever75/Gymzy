@@ -82,6 +82,14 @@ model Organization {
   mediaPosts          MediaPost[]
   mediaTagValidations MediaTagValidation[]
 
+  // Domaine 06
+  gymExerciseCategories          GymExerciseCategory[]
+  gymExercises                   GymExercise[]
+  gymExerciseSessions            GymExerciseSession[]
+  gymExerciseSessionParticipants GymExerciseSessionParticipant[]
+  gymExerciseSessionEntries      GymExerciseSessionEntry[]
+  gymBodyMeasurements            GymBodyMeasurement[]
+
   @@map("organizations")
 }
 
@@ -174,6 +182,12 @@ model User {
   mediaPostsPublished MediaPost[]          @relation("MediaPostPublisher")
   mediaTagsReceived   MediaTagValidation[] @relation("MediaTagTagged")
   mediaTagsToValidate MediaTagValidation[] @relation("MediaTagValidator")
+
+  // Domaine 06
+  gymSessionsCoached          GymExerciseSession[]            @relation("GymExerciseSessionCoach")
+  gymSessionParticipations    GymExerciseSessionParticipant[]
+  gymBodyMeasurements         GymBodyMeasurement[]            @relation("GymMeasurementSubject")
+  gymBodyMeasurementsRecorded GymBodyMeasurement[]            @relation("GymMeasurementRecorder")
 
   @@unique([organizationId, email])
   @@unique([organizationId, phone])
@@ -562,4 +576,134 @@ model MediaTagValidation {
   @@index([taggedUserId])
   @@index([validatorUserId, status])
   @@map("media_tag_validations")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 06 · Suivi d'entraînement (gym)
+// ─────────────────────────────────────────────
+
+model GymExerciseCategory {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  icon           String?
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  exercises    GymExercise[]
+
+  @@index([organizationId, sortOrder])
+  @@map("gym_exercise_categories")
+}
+
+model GymExercise {
+  id                     String   @id @default(uuid())
+  organizationId         String
+  categoryId             String
+  name                   String
+  description            String?
+  // Clé de stockage (chemin), jamais un lien signé : ceux-ci expirent
+  imageUrl               String?
+  recommendedSeries      Int?
+  recommendedReps        Int?
+  recommendedWeightKg    Float?
+  recommendedRestSeconds Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  category     GymExerciseCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  entries      GymExerciseSessionEntry[]
+
+  @@index([organizationId])
+  @@index([categoryId])
+  @@map("gym_exercises")
+}
+
+model GymExerciseSession {
+  id             String   @id @default(uuid())
+  organizationId String
+  coachId        String
+  date           DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization                    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  coach        User                            @relation("GymExerciseSessionCoach", fields: [coachId], references: [id], onDelete: Restrict)
+  participants GymExerciseSessionParticipant[]
+  entries      GymExerciseSessionEntry[]
+
+  @@index([organizationId, date])
+  @@index([coachId, date])
+  @@map("gym_exercise_sessions")
+}
+
+model GymExerciseSessionParticipant {
+  id             String @id @default(uuid())
+  organizationId String
+  sessionId      String
+  userId         String
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  session      GymExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  user         User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("gym_exercise_session_participants")
+}
+
+model GymExerciseSessionEntry {
+  id                   String  @id @default(uuid())
+  organizationId       String
+  sessionId            String
+  // Optionnel : la ligne survit à la suppression de l'exercice du catalogue
+  exerciseId           String?
+  // Figés au moment de la séance
+  exerciseNameSnapshot String
+  categoryNameSnapshot String?
+  series               Int?
+  reps                 Int?
+  weightKg             Float?
+  restSeconds          Int?
+  // Effort ressenti de 1 à 10 (contrainte CHECK dans la migration)
+  rpe                  Int?
+  notes                String?
+  // Détail variable série par série
+  setsDetail           Json?
+  order                Int     @default(0)
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  session      GymExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  exercise     GymExercise?       @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@index([organizationId])
+  @@map("gym_exercise_session_entries")
+}
+
+model GymBodyMeasurement {
+  id               String   @id @default(uuid())
+  organizationId   String
+  userId           String
+  recordedByUserId String
+  measuredAt       DateTime @default(now())
+  weightKg         Float?
+  waistCm          Float?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation("GymMeasurementSubject", fields: [userId], references: [id], onDelete: Restrict)
+  recordedBy   User         @relation("GymMeasurementRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, measuredAt])
+  @@index([organizationId])
+  @@index([recordedByUserId])
+  @@map("gym_body_measurements")
 }
