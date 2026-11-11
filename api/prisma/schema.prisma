@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,869 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// Domaine 01 · Organisation & identité
+// ─────────────────────────────────────────────
+
+enum OrganizationType {
+  GYM
+  MULTI_ACTIVITY
+}
+
+enum MediaValidationMode {
+  AUTOMATIC
+  MANUAL
+}
+
+enum UserRole {
+  PLATFORM_ADMIN
+  ORG_ADMIN
+  STAFF
+  COACH
+  CLIENT
+  PARENT
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+model Organization {
+  id                String           @id @default(uuid())
+  name              String
+  slug              String           @unique
+  type              OrganizationType
+  contactFirstName  String?
+  contactLastName   String?
+  contactEmail      String?
+  contactPhone      String?
+  address           String?
+  logoUrl           String?
+  publicDescription String?
+  primaryColor      String?
+  secondaryColor    String?
+  apiTokenHash      String?          @unique
+  currentApiTokenId String?          @unique
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  settings        OrganizationSettings?
+  apiTokens       ApiToken[]            @relation("OrganizationTokens")
+  currentApiToken ApiToken?             @relation("CurrentToken", fields: [currentApiTokenId], references: [id], onDelete: SetNull)
+  users           User[]
+
+  // Domaine 02
+  activities          Activity[]
+  formulas            SubscriptionFormula[]
+  subscriptions       Subscription[]
+  subscriptionPeriods SubscriptionPeriod[]
+
+  // Domaine 03
+  transactions   Transaction[]
+  paymentRecords PaymentRecord[]
+  invoices       Invoice[]
+
+  // Domaine 04
+  events  Event[]
+  tickets Ticket[]
+
+  // Domaine 05
+  mediaPosts          MediaPost[]
+  mediaTagValidations MediaTagValidation[]
+
+  // Domaine 06
+  gymExerciseCategories          GymExerciseCategory[]
+  gymExercises                   GymExercise[]
+  gymExerciseSessions            GymExerciseSession[]
+  gymExerciseSessionParticipants GymExerciseSessionParticipant[]
+  gymExerciseSessionEntries      GymExerciseSessionEntry[]
+  gymBodyMeasurements            GymBodyMeasurement[]
+
+  // Domaine 07
+  notifications Notification[]
+  deviceTokens  DeviceToken[]
+  otpCodes      OtpCode[]
+
+  // Domaine 08
+  membershipCards MembershipCard[]
+  accessLogs      AccessLog[]
+
+  @@map("organizations")
+}
+
+model OrganizationSettings {
+  id                                String              @id @default(uuid())
+  organizationId                    String              @unique
+  minAgeYears                       Int?
+  maxActiveSubscriptionsPerActivity Int?                @default(1)
+  currency                          String              @default("XOF")
+  gracePeriodDays                   Int                 @default(3)
+  mediaValidationMode               MediaValidationMode
+  createdAt                         DateTime            @default(now())
+  updatedAt                         DateTime            @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_settings")
+}
+
+model ApiToken {
+  id             String    @id @default(uuid())
+  organizationId String
+  label          String
+  tokenHash      String    @unique
+  issuedAt       DateTime
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  lastUsedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization  @relation("OrganizationTokens", fields: [organizationId], references: [id])
+  currentFor   Organization? @relation("CurrentToken")
+
+  @@index([organizationId])
+  @@map("api_tokens")
+}
+
+model User {
+  id                   String     @id @default(uuid())
+  organizationId       String?
+  role                 UserRole
+  status               UserStatus
+  guardianId           String?
+  coachId              String?
+  createdByUserId      String?
+  firstName            String
+  lastName             String
+  email                String?
+  phone                String?
+  passwordHash         String?
+  photoUrl             String?
+  canLogin             Boolean    @default(true)
+  mustChangePassword   Boolean    @default(false)
+  birthDate            DateTime?
+  category             String?
+  heightCm             Int?
+  weightKg             Float?
+  goalType             String?
+  imageRightsConsent   Boolean    @default(false)
+  imageRightsConsentBy String?
+  imageRightsConsentAt DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  guardian     User?         @relation("UserGuardian", fields: [guardianId], references: [id], onDelete: SetNull)
+  dependents   User[]        @relation("UserGuardian")
+  coach        User?         @relation("UserCoach", fields: [coachId], references: [id], onDelete: SetNull)
+  coachedUsers User[]        @relation("UserCoach")
+  createdBy    User?         @relation("UserCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdUsers User[]        @relation("UserCreatedBy")
+
+  // Domaine 02
+  subscriptionsAsBeneficiary Subscription[]       @relation("SubscriptionBeneficiary")
+  agreedPricesSet            Subscription[]       @relation("SubscriptionAgreedPriceSetBy")
+  periodsPaid                SubscriptionPeriod[] @relation("PeriodPayer")
+
+  // Domaine 03
+  transactionsAsBeneficiary Transaction[] @relation("TransactionBeneficiary")
+  transactionsPaid          Transaction[] @relation("TransactionPayer")
+  transactionsConfirmed     Transaction[] @relation("TransactionConfirmedBy")
+
+  // Domaine 04
+  ticketsAsBeneficiary Ticket[] @relation("TicketBeneficiary")
+  ticketsPurchased     Ticket[] @relation("TicketPurchaser")
+  ticketsCheckedIn     Ticket[] @relation("TicketCheckedInBy")
+
+  // Domaine 05
+  mediaPostsAuthored  MediaPost[]          @relation("MediaPostAuthor")
+  mediaPostsPublished MediaPost[]          @relation("MediaPostPublisher")
+  mediaTagsReceived   MediaTagValidation[] @relation("MediaTagTagged")
+  mediaTagsToValidate MediaTagValidation[] @relation("MediaTagValidator")
+
+  // Domaine 06
+  gymSessionsCoached          GymExerciseSession[]            @relation("GymExerciseSessionCoach")
+  gymSessionParticipations    GymExerciseSessionParticipant[]
+  gymBodyMeasurements         GymBodyMeasurement[]            @relation("GymMeasurementSubject")
+  gymBodyMeasurementsRecorded GymBodyMeasurement[]            @relation("GymMeasurementRecorder")
+
+  // Domaine 07
+  notifications Notification[]
+  deviceTokens  DeviceToken[]
+  otpCodes      OtpCode[]
+
+  // Domaine 08
+  membershipCards MembershipCard[]
+  accessLogs      AccessLog[]      @relation("AccessLogUser")
+  accessScans     AccessLog[]      @relation("AccessLogScannedBy")
+
+  @@unique([organizationId, email])
+  @@unique([organizationId, phone])
+  @@index([organizationId])
+  @@index([guardianId])
+  @@index([coachId])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 02 · Activités, formules & abonnements
+// ─────────────────────────────────────────────
+
+enum FormulaBillingType {
+  SUBSCRIPTION
+  PER_SESSION
+}
+
+enum BillingPeriod {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum SubscriptionCloseReason {
+  FORMULA_CHANGED
+  CANCELLED_BY_ADMIN
+  PAYMENT_ABANDONED
+}
+
+model Activity {
+  id               String   @id @default(uuid())
+  organizationId   String
+  parentActivityId String?
+  name             String
+  description      String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent       Activity?             @relation("ActivityParent", fields: [parentActivityId], references: [id], onDelete: Restrict)
+  children     Activity[]            @relation("ActivityParent")
+  formulas     SubscriptionFormula[]
+  mediaPosts   MediaPost[]
+  accessLogs   AccessLog[]
+
+  @@index([organizationId])
+  @@index([parentActivityId])
+  @@map("activities")
+}
+
+model SubscriptionFormula {
+  id                 String             @id @default(uuid())
+  organizationId     String
+  activityId         String
+  name               String
+  price              Int
+  billingType        FormulaBillingType
+  billingPeriod      BillingPeriod?
+  sessionsPerWeek    Int?
+  sessionsPerMonth   Int?
+  durationDays       Int
+  applicableCategory String?
+  isPopular          Boolean            @default(false)
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  activity      Activity       @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  subscriptions Subscription[]
+
+  @@index([organizationId])
+  @@index([activityId])
+  @@map("subscription_formulas")
+}
+
+model Subscription {
+  id                       String                   @id @default(uuid())
+  organizationId           String
+  beneficiaryUserId        String
+  formulaId                String
+  status                   SubscriptionStatus
+  agreedPrice              Int?
+  agreedPriceSetByUserId   String?
+  agreedPriceSetAt         DateTime?
+  closedAt                 DateTime?
+  closeReason              SubscriptionCloseReason?
+  replacedBySubscriptionId String?                  @unique
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  organization     Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  beneficiary      User                 @relation("SubscriptionBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Restrict)
+  formula          SubscriptionFormula  @relation(fields: [formulaId], references: [id], onDelete: Restrict)
+  agreedPriceSetBy User?                @relation("SubscriptionAgreedPriceSetBy", fields: [agreedPriceSetByUserId], references: [id], onDelete: SetNull)
+  replacedBy       Subscription?        @relation("SubscriptionReplacement", fields: [replacedBySubscriptionId], references: [id], onDelete: Restrict)
+  replaces         Subscription?        @relation("SubscriptionReplacement")
+  periods          SubscriptionPeriod[]
+
+  @@index([organizationId, status])
+  @@index([beneficiaryUserId])
+  @@index([formulaId])
+  @@map("subscriptions")
+}
+
+model SubscriptionPeriod {
+  id             String             @id @default(uuid())
+  organizationId String
+  subscriptionId String
+  payerUserId    String
+  status         SubscriptionStatus
+  startDate      DateTime?
+  endDate        DateTime?
+  catalogPrice   Int
+  amount         Int
+  transactionId  String?            @unique
+  consumedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  payer        User         @relation("PeriodPayer", fields: [payerUserId], references: [id], onDelete: Restrict)
+  transaction  Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  accessLogs   AccessLog[]
+
+  @@index([organizationId, endDate])
+  @@index([subscriptionId])
+  @@index([payerUserId])
+  @@map("subscription_periods")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 03 · Paiement & facturation
+// ─────────────────────────────────────────────
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  FIRST_SUBSCRIPTION
+  RENEWAL
+  PER_SESSION
+  EVENT_TICKET
+}
+
+enum PaymentProvider {
+  KKIAPAY
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  CARD
+}
+
+// Valeurs à confirmer avec l'équipe (non retrouvées dans la doc de référence)
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Transaction {
+  id                String            @id @default(uuid())
+  organizationId    String
+  beneficiaryUserId String
+  payerUserId       String?
+  amountOriginal    Int
+  discount          Int               @default(0)
+  amountFinal       Int
+  status            TransactionStatus
+  type              TransactionType
+  provider          PaymentProvider?
+  paymentMethod     PaymentMethod
+  providerReference String?
+  confirmedByUserId String?
+  confirmedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  beneficiary        User                @relation("TransactionBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Restrict)
+  payer              User?               @relation("TransactionPayer", fields: [payerUserId], references: [id], onDelete: Restrict)
+  confirmedBy        User?               @relation("TransactionConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: Restrict)
+  subscriptionPeriod SubscriptionPeriod?
+  paymentRecords     PaymentRecord[]
+  invoice            Invoice?
+  tickets            Ticket[]
+
+  @@unique([organizationId, providerReference])
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([beneficiaryUserId])
+  @@index([payerUserId])
+  @@index([confirmedByUserId])
+  @@map("transactions")
+}
+
+model PaymentRecord {
+  id             String        @id @default(uuid())
+  organizationId String
+  transactionId  String
+  amount         Int
+  status         PaymentStatus
+  requestRaw     String?
+  responseRaw    String?
+  callbackRaw    String?
+  deviceInfo     String?
+  mobileNetwork  String?
+  cardType       String?
+  phone          String?
+  reference      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  transaction  Transaction  @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([transactionId])
+  @@map("payment_records")
+}
+
+model Invoice {
+  id             String   @id @default(uuid())
+  organizationId String
+  transactionId  String   @unique
+  number         String
+  issuedAt       DateTime
+  pdfUrl         String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  transaction  Transaction  @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@map("invoices")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 04 · Billetterie
+// ─────────────────────────────────────────────
+
+enum EventStatus {
+  DRAFT
+  OPEN
+  FULL
+  FINISHED
+}
+
+enum TicketStatus {
+  RESERVED
+  PAID
+  CHECKED_IN
+  CANCELLED
+}
+
+model Event {
+  id             String      @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+  imageUrl       String?
+  startDate      DateTime
+  endDate        DateTime
+  capacity       Int?
+  ticketPrice    Int
+  status         EventStatus @default(DRAFT)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  tickets      Ticket[]
+
+  @@index([organizationId, status])
+  @@map("events")
+}
+
+model Ticket {
+  id                String       @id @default(uuid())
+  organizationId    String
+  eventId           String
+  beneficiaryUserId String
+  purchaserUserId   String
+  status            TicketStatus
+  qrToken           String       @unique
+  transactionId     String?
+  reservedUntil     DateTime?
+  checkedInAt       DateTime?
+  checkedInByUserId String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  event        Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  beneficiary  User         @relation("TicketBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Restrict)
+  purchaser    User         @relation("TicketPurchaser", fields: [purchaserUserId], references: [id], onDelete: Restrict)
+  checkedInBy  User?        @relation("TicketCheckedInBy", fields: [checkedInByUserId], references: [id], onDelete: Restrict)
+  transaction  Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([eventId, status])
+  @@index([status, reservedUntil])
+  @@index([organizationId])
+  @@index([beneficiaryUserId])
+  @@index([purchaserUserId])
+  @@index([transactionId])
+  @@map("tickets")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 05 · Espace média
+// ─────────────────────────────────────────────
+
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+enum MediaValidationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model MediaPost {
+  id                         String    @id @default(uuid())
+  organizationId             String
+  activityId                 String?
+  title                      String
+  body                       String?
+  // Clés de stockage (chemins), jamais des liens signés : ceux-ci expirent
+  mediaUrls                  String[]  @default([])
+  mediaType                  MediaType
+  authorUserId               String
+  isPublic                   Boolean   @default(false)
+  publishedAt                DateTime?
+  publishedByUserId          String?
+  publishedOverridingConsent Boolean   @default(false)
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  activity       Activity?            @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  author         User                 @relation("MediaPostAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  publishedBy    User?                @relation("MediaPostPublisher", fields: [publishedByUserId], references: [id], onDelete: Restrict)
+  tagValidations MediaTagValidation[]
+
+  @@index([organizationId, isPublic, publishedAt])
+  @@index([organizationId, activityId])
+  @@index([authorUserId])
+  @@map("media_posts")
+}
+
+model MediaTagValidation {
+  id              String                @id @default(uuid())
+  organizationId  String
+  mediaPostId     String
+  taggedUserId    String
+  validatorUserId String
+  status          MediaValidationStatus @default(PENDING)
+  createdAt       DateTime              @default(now())
+  validatedAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  mediaPost    MediaPost    @relation(fields: [mediaPostId], references: [id], onDelete: Restrict)
+  taggedUser   User         @relation("MediaTagTagged", fields: [taggedUserId], references: [id], onDelete: Restrict)
+  validator    User         @relation("MediaTagValidator", fields: [validatorUserId], references: [id], onDelete: Restrict)
+
+  @@unique([mediaPostId, taggedUserId])
+  @@index([organizationId])
+  @@index([taggedUserId])
+  @@index([validatorUserId, status])
+  @@map("media_tag_validations")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 06 · Suivi d'entraînement (gym)
+// ─────────────────────────────────────────────
+
+model GymExerciseCategory {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  icon           String?
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  exercises    GymExercise[]
+
+  @@index([organizationId, sortOrder])
+  @@map("gym_exercise_categories")
+}
+
+model GymExercise {
+  id                     String   @id @default(uuid())
+  organizationId         String
+  categoryId             String
+  name                   String
+  description            String?
+  // Clé de stockage (chemin), jamais un lien signé : ceux-ci expirent
+  imageUrl               String?
+  recommendedSeries      Int?
+  recommendedReps        Int?
+  recommendedWeightKg    Float?
+  recommendedRestSeconds Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  category     GymExerciseCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  entries      GymExerciseSessionEntry[]
+
+  @@index([organizationId])
+  @@index([categoryId])
+  @@map("gym_exercises")
+}
+
+model GymExerciseSession {
+  id             String   @id @default(uuid())
+  organizationId String
+  coachId        String
+  date           DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization                    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  coach        User                            @relation("GymExerciseSessionCoach", fields: [coachId], references: [id], onDelete: Restrict)
+  participants GymExerciseSessionParticipant[]
+  entries      GymExerciseSessionEntry[]
+
+  @@index([organizationId, date])
+  @@index([coachId, date])
+  @@map("gym_exercise_sessions")
+}
+
+model GymExerciseSessionParticipant {
+  id             String @id @default(uuid())
+  organizationId String
+  sessionId      String
+  userId         String
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  session      GymExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  user         User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("gym_exercise_session_participants")
+}
+
+model GymExerciseSessionEntry {
+  id                   String  @id @default(uuid())
+  organizationId       String
+  sessionId            String
+  // Optionnel : la ligne survit à la suppression de l'exercice du catalogue
+  exerciseId           String?
+  // Figés au moment de la séance
+  exerciseNameSnapshot String
+  categoryNameSnapshot String?
+  series               Int?
+  reps                 Int?
+  weightKg             Float?
+  restSeconds          Int?
+  // Effort ressenti de 1 à 10 (contrainte CHECK dans la migration)
+  rpe                  Int?
+  notes                String?
+  // Détail variable série par série
+  setsDetail           Json?
+  order                Int     @default(0)
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  session      GymExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  exercise     GymExercise?       @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@index([organizationId])
+  @@map("gym_exercise_session_entries")
+}
+
+model GymBodyMeasurement {
+  id               String   @id @default(uuid())
+  organizationId   String
+  userId           String
+  recordedByUserId String
+  measuredAt       DateTime @default(now())
+  weightKg         Float?
+  waistCm          Float?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation("GymMeasurementSubject", fields: [userId], references: [id], onDelete: Restrict)
+  recordedBy   User         @relation("GymMeasurementRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, measuredAt])
+  @@index([organizationId])
+  @@index([recordedByUserId])
+  @@map("gym_body_measurements")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 07 · Notifications, appareils & OTP
+// ─────────────────────────────────────────────
+
+enum DeviceType {
+  ANDROID
+  IOS
+}
+
+enum OtpPurpose {
+  LOGIN
+  FIRST_LOGIN
+  PASSWORD_RESET
+}
+
+model Notification {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  // Ex. session_reminder, birthday, payment_confirmed
+  eventType      String
+  title          String
+  body           String
+  // Élément concerné (CHECK : les deux ensemble ou aucun des deux)
+  entityType     String?
+  entityId       String?
+  // Données structurées de la notification, pas un fourre-tout de configuration
+  metadata       Json?
+  // Anti-doublon des rappels : ex. "subscription_reminder:<periodId>:J-7"
+  dedupKey       String?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, dedupKey])
+  @@index([userId, isRead, createdAt])
+  @@index([organizationId])
+  @@map("notifications")
+}
+
+model DeviceToken {
+  id             String     @id @default(uuid())
+  organizationId String
+  userId         String
+  // Un jeton = une seule ligne ; réattribuée si un autre compte l'enregistre
+  token          String     @unique
+  deviceType     DeviceType
+  deviceName     String?
+  appVersion     String?
+  // false = jeton mort ou déconnecté, la ligne est conservée
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, isActive])
+  @@index([organizationId])
+  @@map("device_tokens")
+}
+
+model OtpCode {
+  id             String     @id @default(uuid())
+  // Nul pour un administrateur plateforme, comme User.organizationId
+  organizationId String?
+  userId         String
+  // Jamais le code en clair
+  codeHash       String
+  purpose        OtpPurpose
+  attempts       Int        @default(0)
+  expiresAt      DateTime
+  createdAt      DateTime   @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, purpose])
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@map("otp_codes")
+}
+
+// ─────────────────────────────────────────────
+// Domaine 08 · Carte d'adhésion & contrôle d'accès
+// ─────────────────────────────────────────────
+
+enum AccessResult {
+  ALLOWED
+  WARNING
+  DENIED
+}
+
+// Pas de contrainte unique sur userId : une carte perdue est révoquée (revokedAt)
+// et remplacée par une nouvelle ligne. L'unicité de la carte ACTIVE par personne
+// est garantie par un index unique partiel écrit à la main dans la migration
+// (Prisma ne sait pas décrire un index partiel).
+model MembershipCard {
+  id             String    @id @default(uuid())
+  organizationId String
+  userId         String
+  cardNumber     String    @unique
+  // Jeton signé par le serveur (HMAC) : encode salle, personne et numéro de carte
+  signedToken    String
+  issuedAt       DateTime  @default(now())
+  // Nul = carte active
+  revokedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("membership_cards")
+}
+
+model AccessLog {
+  id                   String       @id @default(uuid())
+  organizationId       String
+  // Nul si le code scanné est inconnu ou falsifié (le résultat est alors DENIED)
+  userId               String?
+  scannedByUserId      String
+  // Point d'accès : texte libre pour le MVP
+  gate                 String?
+  // Vert = ALLOWED, orange = WARNING (délai de grâce, quota dépassé), rouge = DENIED
+  result               AccessResult
+  activityId           String?
+  subscriptionPeriodId String?
+  scannedAt            DateTime     @default(now())
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user               User?               @relation("AccessLogUser", fields: [userId], references: [id], onDelete: Restrict)
+  scannedBy          User                @relation("AccessLogScannedBy", fields: [scannedByUserId], references: [id], onDelete: Restrict)
+  activity           Activity?           @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  subscriptionPeriod SubscriptionPeriod? @relation(fields: [subscriptionPeriodId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, scannedAt])
+  @@index([userId, scannedAt])
+  @@index([scannedByUserId])
+  @@index([activityId])
+  @@index([subscriptionPeriodId])
+  @@map("membership_cards_access_logs")
 }
