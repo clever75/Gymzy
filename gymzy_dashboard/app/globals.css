@@ -31,11 +31,17 @@
   --warning-surface: var(--gz-amber-900);
   --danger: var(--gz-red-300);
   --danger-surface: var(--gz-red-900);
-  --info-surface: color-mix(in srgb, var(--primary) 14%, var(--surface));
 
   color-scheme: dark;
 }
-
+   /* Rôles dérivés de --primary : à recalculer partout où --primary est redéfini.
+      Une variable CSS qui en contient une autre est résolue là où elle est
+      déclarée. Sans cette règle, --info-surface resterait teintée en lime
+      dans le dashboard, même avec la couleur d'une autre salle. */
+   :root,
+   [data-brand] {
+     --info-surface: color-mix(in srgb, var(--primary) 14%, var(--surface));
+   }
 /* ───────── Pont vers Tailwind ───────── */
 @theme inline {
   --color-background: var(--background);
