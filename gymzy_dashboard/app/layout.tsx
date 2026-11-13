@@ -30,7 +30,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr"
       className={`${displayFont.variable} ${bodyFont.variable} ${geistMono.variable} h-full antialiased`}
-    >
+         suppressHydrationWarning
+
+   >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
