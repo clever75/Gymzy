@@ -2,7 +2,7 @@
 // avec un « ton » pour la couleur du Badge (rôles de couleur, jamais de couleur en dur).
 import type { DisplayStatus } from "./member-status";
 import type { PaymentMethod, PaymentStatus, PaymentType } from "./types";
-
+import type { Period, StatusFilter } from "./payment-filters";
 // Mêmes valeurs que les variantes du composant Badge.
 // Si Badge change, TypeScript signalera l'écart à l'endroit où on l'utilise.
 export type Tone = "success" | "warning" | "danger" | "info" | "neutral";
@@ -42,4 +42,18 @@ export const paymentTypeLabels: Record<PaymentType, string> = {
   RENEWAL: "Renouvellement",
   PER_SESSION: "Séance",
   EVENT_TICKET: "Billet",
+};
+
+// Libellés des périodes du journal des paiements (WEB-05).
+export const periodLabels: Record<Period, string> = {
+  jour: "Aujourd'hui",
+  "7j": "7 derniers jours",
+  mois: "Ce mois",
+  tout: "Toute la période",
+};
+// Libellés des puces de statut du journal des paiements (au pluriel, comme la maquette).
+export const statusFilterLabels: Record<StatusFilter, string> = {
+  COMPLETED: "Payés",
+  PENDING: "En attente",
+  FAILED: "Échoués",
 };

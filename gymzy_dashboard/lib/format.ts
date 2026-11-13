@@ -19,6 +19,11 @@ const shortDate = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: DEFAULT_TIME_ZONE,
 });
+const timeOnly = new Intl.DateTimeFormat("fr-FR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: DEFAULT_TIME_ZONE,
+});
 
 // 12000 -> "12 000 F"
 export function formatFcfa(amount: number): string {
@@ -33,4 +38,26 @@ export function formatDate(value: Date | string): string {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return shortDate.format(date);
+}
+
+// "2026-10-05T10:42:00Z" -> "10:42"
+export function formatTime(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return timeOnly.format(date);
+}
+
+const numericDate = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: DEFAULT_TIME_ZONE,
+});
+
+// "2026-10-28T10:42:00Z" -> "28/10/2026"
+// Pour les exports : un tableur en français le reconnaît comme une date.
+export function formatDateNumeric(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return numericDate.format(date);
 }
