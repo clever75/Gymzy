@@ -46,3 +46,18 @@ export function formatTime(value: Date | string): string {
   if (Number.isNaN(date.getTime())) return "—";
   return timeOnly.format(date);
 }
+
+const numericDate = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: DEFAULT_TIME_ZONE,
+});
+
+// "2026-10-28T10:42:00Z" -> "28/10/2026"
+// Pour les exports : un tableur en français le reconnaît comme une date.
+export function formatDateNumeric(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return numericDate.format(date);
+}
