@@ -26,6 +26,7 @@ import {
   buildPaymentsQuery,
   computePaymentTotals,
   filterPayments,
+  listCollectors,
   parsePaymentFilters,
   paymentsInPeriod,
 } from "@/lib/payment-filters";
@@ -44,6 +45,8 @@ export default async function PaymentsPage({
   const params = await searchParams;
   const filters = parsePaymentFilters(params);
   const now = getNow();
+    // Sur tous les paiements (pas les filtrés) : la liste ne rétrécit pas quand on filtre.
+  const collectors = listCollectors(mockPayments);
     // Confort d'affichage seulement : la route d'export refuse elle-même (403).
   const { role } = await getSession();
   const canExport = canExportPayments(role);
@@ -62,8 +65,7 @@ export default async function PaymentsPage({
         </div>
         {canExport && <ExportPaymentsButton filters={filters} />}
       </header>
-            <PaymentsFilters filters={filters} />
-
+      <PaymentsFilters filters={filters} collectors={collectors} />
       <section
         aria-label="Totaux de la période"
         className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"

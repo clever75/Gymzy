@@ -1,6 +1,6 @@
 // Filtres et totaux du journal des paiements (WEB-05, PAY-09, PAY-10).
 // Fonctions pures, sans import d'exécution : elles se testent avec Node.
-import type { Payment, PaymentMethod } from "./types";
+import type { Payment, PaymentMethod, PaymentType } from "./types";
 
 // ── Périodes ────────────────────────────────────────────────────────────
 export const PERIODS = ["jour", "7j", "mois", "tout"] as const;
@@ -23,10 +23,22 @@ const STATUSES = [
 ] as const;
 export type StatusFilter = (typeof STATUSES)[number][1];
 
+// Types de paiement filtrables (PAY-09). Même principe que les modes.
+const TYPES = [
+  ["inscription", "FIRST_SUBSCRIPTION"],
+  ["renouvellement", "RENEWAL"],
+  ["seance", "PER_SESSION"],
+  ["billet", "EVENT_TICKET"],
+] as const;
+
 export interface PaymentFilters {
   period: Period;
   method: PaymentMethod | null;
   status: StatusFilter | null;
+  type: PaymentType | null;
+  // Nom de l'encaisseur (colonne « Encaissé par »). Texte libre : la liste
+  // des personnes dépend de la salle, elle n'est pas figée dans le code.
+  collector: string | null;
   q: string;
 }
 
@@ -34,6 +46,8 @@ export const DEFAULT_PAYMENT_FILTERS: PaymentFilters = {
   period: "mois",
   method: null,
   status: null,
+  type: null,
+  collector: null,
   q: "",
 };
 
@@ -50,11 +64,16 @@ export function parsePaymentFilters(params: SearchParams): PaymentFilters {
   const rawPeriod = firstValue(params.periode);
   const rawMode = firstValue(params.mode);
   const rawStatus = firstValue(params.statut);
+  const rawType = firstValue(params.type);
+  // Texte vide ou espaces seuls : pas de filtre (null).
+  const rawCollector = (firstValue(params.encaisse) ?? "").trim().slice(0, MAX_QUERY_LENGTH);
 
   return {
     period: PERIODS.find((p) => p === rawPeriod) ?? DEFAULT_PAYMENT_FILTERS.period,
     method: METHODS.find(([slug]) => slug === rawMode)?.[1] ?? null,
     status: STATUSES.find(([slug]) => slug === rawStatus)?.[1] ?? null,
+    type: TYPES.find(([slug]) => slug === rawType)?.[1] ?? null,
+    collector: rawCollector === "" ? null : rawCollector,
     q: (firstValue(params.q) ?? "").trim().slice(0, MAX_QUERY_LENGTH),
   };
 }
@@ -71,6 +90,9 @@ export function activeFilterParams(filters: PaymentFilters): [string, string][] 
   if (mode) entries.push(["mode", mode]);
   const statut = STATUSES.find(([, value]) => value === filters.status)?.[0];
   if (statut) entries.push(["statut", statut]);
+  const type = TYPES.find(([, value]) => value === filters.type)?.[0];
+  if (type) entries.push(["type", type]);
+  if (filters.collector) entries.push(["encaisse", filters.collector]);
   return entries;
 }
 
@@ -136,8 +158,21 @@ export function filterPayments(payments: Payment[], filters: PaymentFilters, now
     (p) =>
       (filters.method === null || p.method === filters.method) &&
       matchesStatus(p, filters.status) &&
+      (filters.type === null || p.type === filters.type) &&
+      // Égalité exacte : la valeur vient de la liste déroulante (listCollectors).
+      (filters.collector === null || p.confirmedBy === filters.collector) &&
       (query === "" || normalizeText(p.memberName).includes(query)),
   );
+}
+
+// Noms d'encaisseurs distincts, triés (pour la liste déroulante).
+// Les paiements en ligne n'ont pas d'encaisseur (null) : ils sont ignorés.
+export function listCollectors(payments: Payment[]): string[] {
+  const names = new Set<string>();
+  for (const p of payments) {
+    if (p.confirmedBy) names.add(p.confirmedBy);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, "fr"));
 }
 
 // ── Totaux ──────────────────────────────────────────────────────────────
