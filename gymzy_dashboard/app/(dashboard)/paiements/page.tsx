@@ -30,6 +30,9 @@ import {
   paymentsInPeriod,
 } from "@/lib/payment-filters";
 import { PaymentsFilters } from "@/components/payments/payments-filters";
+import { ExportPaymentsButton } from "@/components/payments/export-payments-button";
+import { canExportPayments } from "@/lib/permissions";
+import { getSession } from "@/lib/session";
 export const metadata: Metadata = { title: "Paiements · Gymzy" };
 
 // Dans Next.js 16, searchParams est une promesse : la page est donc « async ».
@@ -41,6 +44,9 @@ export default async function PaymentsPage({
   const params = await searchParams;
   const filters = parsePaymentFilters(params);
   const now = getNow();
+    // Confort d'affichage seulement : la route d'export refuse elle-même (403).
+  const { role } = await getSession();
+  const canExport = canExportPayments(role);
 
   // Les totaux suivent la période seulement ; le tableau suit tous les filtres.
   const totals = computePaymentTotals(paymentsInPeriod(mockPayments, filters.period, now));
@@ -49,9 +55,12 @@ export default async function PaymentsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl">Paiements et recettes</h1>
-        <p className="text-foreground-muted">{periodLabels[filters.period]}</p>
+            <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl">Paiements et recettes</h1>
+          <p className="text-foreground-muted">{periodLabels[filters.period]}</p>
+        </div>
+        {canExport && <ExportPaymentsButton filters={filters} />}
       </header>
             <PaymentsFilters filters={filters} />
 
