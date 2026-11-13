@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_PAYMENT_FILTERS as DEFAULTS,
+  activeFilterParams,
   buildPaymentsQuery,
   computePaymentTotals,
   filterPayments,
@@ -62,7 +63,13 @@ test("construction de l'adresse : défauts omis, ordre stable, page > 1", () => 
     "?periode=7j&mode=especes&q=ama+kofi&page=2",
   );
 });
-
+test("champs de formulaire : seuls les filtres non par défaut, sans recherche ni page", () => {
+  assert.deepEqual(activeFilterParams(DEFAULTS), []);
+  assert.deepEqual(
+    activeFilterParams({ ...DEFAULTS, period: "tout", method: "CARD", status: "FAILED", q: "ama" }),
+    [["periode", "tout"], ["mode", "carte"], ["statut", "echoues"]],
+  );
+});
 test("aller-retour : lire(construire(filtres)) redonne les mêmes filtres", () => {
   const f = { period: "jour", method: "MOBILE_MONEY", status: "PENDING", q: "yao" };
   const params = Object.fromEntries(new URLSearchParams(buildPaymentsQuery(f)));

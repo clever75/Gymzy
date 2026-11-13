@@ -29,7 +29,7 @@ import {
   parsePaymentFilters,
   paymentsInPeriod,
 } from "@/lib/payment-filters";
-
+import { PaymentsFilters } from "@/components/payments/payments-filters";
 export const metadata: Metadata = { title: "Paiements · Gymzy" };
 
 // Dans Next.js 16, searchParams est une promesse : la page est donc « async ».
@@ -53,6 +53,7 @@ export default async function PaymentsPage({
         <h1 className="text-2xl">Paiements et recettes</h1>
         <p className="text-foreground-muted">{periodLabels[filters.period]}</p>
       </header>
+            <PaymentsFilters filters={filters} />
 
       <section
         aria-label="Totaux de la période"

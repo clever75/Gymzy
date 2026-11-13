@@ -59,14 +59,24 @@ export function parsePaymentFilters(params: SearchParams): PaymentFilters {
   };
 }
 
+// Paires [nom, valeur] des filtres qui ne sont pas à leur valeur par défaut
+// (sans la recherche ni la page). Sert à construire l'adresse, et les champs
+// cachés d'un formulaire de recherche qui doit conserver les filtres.
+export function activeFilterParams(filters: PaymentFilters): [string, string][] {
+  const entries: [string, string][] = [];
+  if (filters.period !== DEFAULT_PAYMENT_FILTERS.period) {
+    entries.push(["periode", filters.period]);
+  }
+  const mode = METHODS.find(([, value]) => value === filters.method)?.[0];
+  if (mode) entries.push(["mode", mode]);
+  const statut = STATUSES.find(([, value]) => value === filters.status)?.[0];
+  if (statut) entries.push(["statut", statut]);
+  return entries;
+}
+
 // Construit la partie « ?… » de l'adresse. Les valeurs par défaut sont omises.
 export function buildPaymentsQuery(filters: PaymentFilters, page = 1): string {
-  const qs = new URLSearchParams();
-  if (filters.period !== DEFAULT_PAYMENT_FILTERS.period) qs.set("periode", filters.period);
-  const mode = METHODS.find(([, value]) => value === filters.method)?.[0];
-  if (mode) qs.set("mode", mode);
-  const statut = STATUSES.find(([, value]) => value === filters.status)?.[0];
-  if (statut) qs.set("statut", statut);
+  const qs = new URLSearchParams(activeFilterParams(filters));
   if (filters.q) qs.set("q", filters.q);
   if (page > 1) qs.set("page", String(page));
   const text = qs.toString();
