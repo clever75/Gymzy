@@ -139,3 +139,14 @@ test("totaux : seuls les paiements confirmés comptent, encaissé = espèces + e
   assert.deepEqual(all, { collected: 102000, cash: 20000, online: 82000, discounts: 3000 });
   assert.equal(all.collected, all.cash + all.online);
 });
+
+test("totaux : suivent la liste filtrée", () => {
+  assert.deepEqual(
+    computePaymentTotals(run({ period: "tout", collector: "Akua" })),
+    { collected: 15000, cash: 15000, online: 0, discounts: 0 }, // l'id 7 est PROCESSING : non compté
+  );
+  assert.deepEqual(
+    computePaymentTotals(run({ period: "tout", status: "PENDING" })),
+    { collected: 0, cash: 0, online: 0, discounts: 0 },
+  );
+});
