@@ -2,6 +2,7 @@
 // avec un « ton » pour la couleur du Badge (rôles de couleur, jamais de couleur en dur).
 import type { DisplayStatus } from "./member-status";
 import type { PaymentMethod, PaymentStatus, PaymentType } from "./types";
+import type { MemberStatusFilter } from "./member-filters";
 import type { Period, StatusFilter } from "./payment-filters";
 // Mêmes valeurs que les variantes du composant Badge.
 // Si Badge change, TypeScript signalera l'écart à l'endroit où on l'utilise.
@@ -56,4 +57,12 @@ export const statusFilterLabels: Record<StatusFilter, string> = {
   COMPLETED: "Payés",
   PENDING: "En attente",
   FAILED: "Échoués",
+};
+// Libellés des puces de statut de la liste des membres (WEB-02), comme la maquette.
+// Pas de « Annulé » : ces membres n'apparaissent que sous « Tous ».
+export const memberFilterLabels: Record<MemberStatusFilter, string> = {
+  ACTIVE: "Actifs",
+  EXPIRING_SOON: "Expirent bientôt",
+  EXPIRED: "Expirés",
+  PENDING: "En attente",
 };
