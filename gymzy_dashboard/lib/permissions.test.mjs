@@ -9,10 +9,15 @@ test("export des paiements : réservé à l'administrateur (AUTH-11)", () => {
   assert.equal(canExportPayments("STAFF"), false);
   assert.equal(canExportPayments("COACH"), false);
 });
-// Choix provisoire (question ouverte : staff autorisé ou non ?). Ce test le fige
-// pour qu'un changement soit voulu et visible.
-test("export des membres : réservé à l'administrateur (à confirmer)", () => {
+// Décision du 17 nov. 2026 : administrateur et staff. Le test fige ce choix
+// pour qu'un changement soit voulu et visible. Les paiements, eux, restent admin seul.
+test("export des membres : administrateur et staff, pas les coachs", () => {
   assert.equal(canExportMembers("ORG_ADMIN"), true);
-  assert.equal(canExportMembers("STAFF"), false);
+  assert.equal(canExportMembers("STAFF"), true);
   assert.equal(canExportMembers("COACH"), false);
+});
+
+test("export : le staff peut exporter les membres mais pas les paiements", () => {
+  assert.equal(canExportMembers("STAFF"), true);
+  assert.equal(canExportPayments("STAFF"), false);
 });
