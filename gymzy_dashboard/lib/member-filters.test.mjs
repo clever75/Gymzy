@@ -56,11 +56,20 @@ test("filtre sans critère : tout le monde", () => {
   assert.deepEqual(ids(filterMembers(members, DEFAULT_MEMBER_FILTERS, getStatus)), ["1", "2", "3", "4"]);
 });
 
-test("« Actifs » inclut ceux qui expirent bientôt ; « Expirent bientôt » seulement eux", () => {
+test("puces exclusives : « Actifs » exclut ceux qui expirent bientôt (comme leur badge)", () => {
   const actifs = filterMembers(members, { status: "ACTIVE", q: "" }, getStatus);
-  assert.deepEqual(ids(actifs), ["1", "2"]);
+  assert.deepEqual(ids(actifs), ["1"]);
   const bientot = filterMembers(members, { status: "EXPIRING_SOON", q: "" }, getStatus);
   assert.deepEqual(ids(bientot), ["2"]);
+});
+
+test("chaque membre est dans une seule puce de statut, et « Tous » les contient tous", () => {
+  const puces = ["ACTIVE", "EXPIRING_SOON", "EXPIRED", "PENDING"];
+  for (const x of members) {
+    const dans = puces.filter((status) =>
+      filterMembers([x], { status, q: "" }, getStatus).length === 1);
+    assert.equal(dans.length, 1, `membre ${x.id}`);
+  }
 });
 
 test("statuts expirés et en attente", () => {
@@ -87,4 +96,5 @@ test("recherche : téléphone sans espaces ni « + »", () => {
 test("statut et recherche se combinent", () => {
   assert.deepEqual(ids(filterMembers(members, { status: "EXPIRED", q: "ama" }, getStatus)), []);
   assert.deepEqual(ids(filterMembers(members, { status: "ACTIVE", q: "ama" }, getStatus)), ["1"]);
+  assert.deepEqual(ids(filterMembers(members, { status: "ACTIVE", q: "agbe" }, getStatus)), []);
 });
