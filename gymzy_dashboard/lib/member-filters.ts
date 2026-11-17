@@ -65,16 +65,14 @@ function digitsOnly(text: string): string {
   return text.replace(/\D/g, "");
 }
 
-// « Actifs » = abonnement actif, y compris ceux qui expirent bientôt (ils le sont encore).
-// Les autres puces correspondent au statut affiché.
+// Les puces sont exclusives : chacune correspond au statut affiché dans le tableau.
+// Un membre « Expire bientôt » n'apparaît donc que sous cette puce (et sous « Tous »).
 function matchesStatus(
   member: Member,
   status: MemberStatusFilter | null,
   getStatus: (member: Member) => DisplayStatus,
 ): boolean {
-  if (status === null) return true;
-  if (status === "ACTIVE") return member.status === "ACTIVE";
-  return getStatus(member) === status;
+  return status === null || getStatus(member) === status;
 }
 
 // Nom (dans les deux ordres) ou téléphone. Le téléphone est comparé sans espaces
