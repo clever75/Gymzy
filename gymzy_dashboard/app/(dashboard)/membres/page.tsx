@@ -109,7 +109,7 @@ export default async function MembersPage({
                       {member.guardianName ? (
                         <span className="text-foreground-muted">parent : {member.guardianName}</span>
                       ) : (
-                        member.phone
+                        (member.phone ?? "—")
                       )}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">

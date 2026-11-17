@@ -75,8 +75,8 @@ function matchesStatus(
   return status === null || getStatus(member) === status;
 }
 
-// Nom (dans les deux ordres) ou téléphone. Le téléphone est comparé sans espaces
-// ni « + » : « 90 12 34 » trouve « +228 90 12 34 56 ».
+// Nom (dans les deux ordres) ou téléphone (absent pour un enfant). Le téléphone est
+// comparé sans espaces ni « + » : « 90 12 34 » trouve « +228 90 12 34 56 ».
 function matchesQuery(member: Member, q: string): boolean {
   if (q === "") return true;
   const query = normalizeText(q);
@@ -84,7 +84,7 @@ function matchesQuery(member: Member, q: string): boolean {
   const last = normalizeText(member.lastName);
   if (`${first} ${last}`.includes(query) || `${last} ${first}`.includes(query)) return true;
   const digits = digitsOnly(q);
-  return digits !== "" && digitsOnly(member.phone).includes(digits);
+  return digits !== "" && digitsOnly(member.phone ?? "").includes(digits);
 }
 
 export function filterMembers(

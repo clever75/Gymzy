@@ -28,7 +28,7 @@ export function membersToCsvRows(
   return members.map((m) => [
     m.lastName,
     m.firstName,
-    m.phone,
+    m.phone ?? "", // un enfant n'a pas de téléphone : cellule vide
     m.guardianName ?? "", // cellule vide, pas le texte « null »
     m.activity,
     m.formula,
