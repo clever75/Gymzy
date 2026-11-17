@@ -21,5 +21,7 @@
 - [ ] `npm run lint`, `npm test` et `npm run build` passent
 - [ ] `CHANGELOG.md` est à jour
 - [ ] `docs/avancement.md` est à jour (si un écran a avancé)
+- [ ] `docs/journal.md` : entrée ajoutée (fonctionnalité terminée et vérifiée)
+- [ ] `docs/questions-ouvertes.md` : question ajoutée ou réponse notée, si besoin
 - [ ] Aucun secret, `.env` ni fichier généré
 - [ ] J'ai relu mon propre diff
