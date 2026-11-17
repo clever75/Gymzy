@@ -17,8 +17,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Dashboard : nom et couleur de la salle appliqués à l'interface (#9)
 - Paiements : page « Paiements et recettes » avec journal, filtres, totaux et export CSV réservé à l'administrateur (#10)
 - Paiements : filtres « type » et « encaisseur » (#11, #12)
+- Dépôt : README, journal des changements, avancement par écran, décisions, modèle de PR et script `npm test` (#14)
+- Dépôt : journal de développement et questions ouvertes (#15)
+- Membres : page « Membres » avec recherche, puces de statut, pagination à 25 et export CSV (#16)
+- Membres : le staff peut exporter la liste, les coachs non (#19)
 
 ### Corrigé
 
 - Dashboard : styles globaux (couche de base, noms des variables de police) (#3)
 - Paiements : totaux calculés sur la liste filtrée (#13)
+- Membres : les puces de statut sont exclusives, alignées sur les badges du tableau (#17)
+- Tests : couverture des filtres et de l'export des membres, test CSV du téléphone corrigé (#18)

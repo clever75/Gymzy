@@ -1,6 +1,6 @@
 # Avancement du dashboard web
 
-Mis à jour le 17 nov. 2026, d'après l'état de `main` après la PR #13.
+Mis à jour le 17 nov. 2026, d'après l'état de `main` après la PR #19.
 
 **États** : À faire · En cours · Fait (données factices) · Branché à l'API.
 Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API.
@@ -10,8 +10,8 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Écran | État | Ce qui manque |
 |---|---|---|
 | WEB-01 Tableau de bord | À faire | Page vide (placeholder) |
-| WEB-02 Membres | À faire | Page vide. Types et données factices prêts. |
-| WEB-03 Fiche membre | À faire | Dépend de WEB-02 |
+| WEB-02 Membres | En cours (données factices) | Liste, recherche, puces de statut, pagination et export CSV (admin et staff) sont faits. Reste : filtres activité, formule et coach avec tri (USR-03), export Excel (DASH-03), couche d'accès aux données (ADR 0002), `phone` nullable pour les enfants (USR-02), branchement API |
+| WEB-03 Fiche membre | À faire | Page provisoire (le lien depuis la liste existe) |
 | WEB-04 Activités et formules | À faire | Page vide |
 | WEB-05 Paiements et recettes | Fait (données factices) | Tri des colonnes, export Excel (règle du cahier §8.2), confirmation des actions sensibles, branchement API |
 | WEB-06 Cartes et accès | À faire | Page vide, module `membershipCard` |
@@ -30,6 +30,6 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Connexion (AUTH-05) | À faire | La session actuelle est factice (`lib/session.ts`) |
 | Couche d'accès aux données | À faire | Voir ADR 0002. WEB-05 lit encore les données factices directement. |
 | Branchement à l'API | À faire | Après la couche d'accès aux données |
-| Tests | En cours | 22 tests de logique pure. Pas de tests de composants ni de bout en bout. |
+| Tests | En cours | 42 tests de logique pure. Pas de tests de composants ni de bout en bout. |
 | Accessibilité | À auditer | Contrastes, clavier, libellés |
 | Utilisable dès 768 px | À vérifier | Conçu pour 1280 px et plus |

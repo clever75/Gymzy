@@ -8,6 +8,9 @@ Une même application sert plusieurs salles, chacune avec ses données isolées 
 - Avancement écran par écran : [`docs/avancement.md`](docs/avancement.md)
 - Historique des changements : [`CHANGELOG.md`](CHANGELOG.md)
 - Décisions importantes et leurs raisons : [`docs/decisions/`](docs/decisions/)
+- Questions en attente de réponse : [`docs/questions-ouvertes.md`](docs/questions-ouvertes.md)
+- Ce qui a été fait et appris, fonctionnalité par fonctionnalité : [`docs/journal.md`](docs/journal.md)
+- Ce qui reste à faire : les Issues GitHub du dépôt
 
 ## Structure du dépôt
 
@@ -53,5 +56,5 @@ npm test
 - **Messages de commit et titres de PR** au format `type: ce que fait le changement`, en français.
   Le titre de la PR devient le message du commit sur `main` : ce n'est **jamais** un lien.
 - **Une PR = une idée**, terminée et vérifiée (lint, tests, build au vert).
-- **À chaque PR** : mettre à jour `CHANGELOG.md` et, si un écran avance, `docs/avancement.md`.
+- **À chaque PR** : mettre à jour `CHANGELOG.md` et, si un écran avance, `docs/avancement.md`. Quand une fonctionnalité est terminée et vérifiée, ajouter une entrée à `docs/journal.md`. Les questions en attente vont dans `docs/questions-ouvertes.md`, ce qui reste à faire dans les Issues.
 - **Jamais dans Git** : clés, mots de passe, fichiers `.env`, `node_modules/`, fichiers générés.
