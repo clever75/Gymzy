@@ -16,6 +16,7 @@ export interface Member {
   lastName: string;
   phone: string;
   guardianName: string | null; // renseigné pour un enfant (User.guardianId)
+  coachName: string | null;    // coach référent, null si aucun (colonne « Coach » de WEB-02)
   activity: string;            // ex. "Musculation"
   formula: string;             // ex. "Mensuel"
   status: SubscriptionStatus;
