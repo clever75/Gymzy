@@ -2,13 +2,11 @@
 // Le groupe (dashboard) n'apparaît pas dans l'adresse : /membres/export.
 import type { NextRequest } from "next/server";
 import { buildCsv } from "@/lib/csv";
+import { listMembersForExport } from "@/lib/data/members";
 import { formatDateNumeric } from "@/lib/format";
 import { memberStatusLabels } from "@/lib/labels";
 import { MEMBER_EXPORT_HEADERS, membersToCsvRows } from "@/lib/member-export";
-import { filterMembers, parseMemberFilters } from "@/lib/member-filters";
-import { getDisplayStatus } from "@/lib/member-status";
-import { getNow } from "@/lib/mock/clock";
-import { mockMembers } from "@/lib/mock/members";
+import { parseMemberFilters } from "@/lib/member-filters";
 import { canExportMembers } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
 
@@ -24,18 +22,17 @@ export async function GET(request: NextRequest) {
 
   // 2. Mêmes filtres que la page, lus par la même fonction. Pas de pagination.
   const filters = parseMemberFilters(Object.fromEntries(request.nextUrl.searchParams));
-  const now = getNow();
-  const members = filterMembers(mockMembers, filters, (m) => getDisplayStatus(m, now));
+  const members = await listMembersForExport(filters);
 
   // 3. Les vrais libellés et formats, injectés dans la fonction pure.
   const rows = membersToCsvRows(members, {
-    statusLabel: (m) => memberStatusLabels[getDisplayStatus(m, now)].label,
+    statusLabel: (m) => memberStatusLabels[m.displayStatus].label,
     date: formatDateNumeric,
   });
   const csv = buildCsv(MEMBER_EXPORT_HEADERS, rows);
 
-  // 4. Nom de fichier fabriqué par nous (date seulement).
-  const filename = `membres-${now.toISOString().slice(0, 10)}.csv`;
+  // 4. Nom de fichier fabriqué par nous (date du jour seulement).
+  const filename = `membres-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new Response(csv, {
     headers: {

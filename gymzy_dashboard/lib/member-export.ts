@@ -15,15 +15,17 @@ export const MEMBER_EXPORT_HEADERS = [
   "Coach",
 ];
 
-export interface MemberExportContext {
-  statusLabel: (member: Member) => string; // statut affiché, ex. "Expire bientôt"
+// Générique : l'appelant peut passer des membres enrichis (ex. avec leur statut affiché)
+// et son statusLabel les reçoit tels quels.
+export interface MemberExportContext<M extends Member = Member> {
+  statusLabel: (member: M) => string; // statut affiché, ex. "Expire bientôt"
   date: (iso: string) => string; // ex. "28/10/2026"
 }
 
 // L'ordre des valeurs doit suivre exactement MEMBER_EXPORT_HEADERS.
-export function membersToCsvRows(
-  members: Member[],
-  context: MemberExportContext,
+export function membersToCsvRows<M extends Member>(
+  members: M[],
+  context: MemberExportContext<M>,
 ): string[][] {
   return members.map((m) => [
     m.lastName,
