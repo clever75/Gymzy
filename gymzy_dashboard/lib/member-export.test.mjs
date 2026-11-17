@@ -26,6 +26,12 @@ test("une ligne : ordre des colonnes, valeurs absentes = cellule vide (jamais «
   assert.equal(row[8], "");
 });
 
+test("enfant sans téléphone : cellule vide, jamais « null »", () => {
+  const [row] = membersToCsvRows([{ ...member, phone: null, guardianName: "Ama Kofi" }], context);
+  assert.equal(row[2], "");
+  assert.equal(row[3], "Ama Kofi");
+});
+
 test("enfant : le parent apparaît dans « Parent / tuteur »", () => {
   const [row] = membersToCsvRows([{ ...member, guardianName: "Ama Kofi" }], context);
   assert.equal(row[3], "Ama Kofi");

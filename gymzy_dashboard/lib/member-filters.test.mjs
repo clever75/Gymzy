@@ -93,6 +93,14 @@ test("recherche : téléphone sans espaces ni « + »", () => {
   assert.deepEqual(find("+"), []);
 });
 
+test("enfant sans téléphone : la recherche ne plante pas et ne le trouve pas par numéro", () => {
+  const enfant = { ...m("5", "Kofi", "Kofi", null, "ACTIVE"), guardianName: "Ama Kofi" };
+  const tous = [...members, enfant];
+  const find = (q) => ids(filterMembers(tous, { status: null, q }, getStatus));
+  assert.deepEqual(find("90 12 34"), ["1"]); // le parent seulement
+  assert.deepEqual(find("kofi kofi"), ["5"]); // mais le nom fonctionne
+});
+
 test("statut et recherche se combinent", () => {
   assert.deepEqual(ids(filterMembers(members, { status: "EXPIRED", q: "ama" }, getStatus)), []);
   assert.deepEqual(ids(filterMembers(members, { status: "ACTIVE", q: "ama" }, getStatus)), ["1"]);

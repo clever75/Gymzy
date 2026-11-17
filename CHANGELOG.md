@@ -16,6 +16,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Dashboard : menu latéral selon le rôle et les modules actifs de la salle (#8)
 - Dashboard : nom et couleur de la salle appliqués à l'interface (#9)
 - Paiements : page « Paiements et recettes » avec journal, filtres, totaux et export CSV réservé à l'administrateur (#10)
+- Membres : un enfant n'a plus le numéro de son parent comme téléphone ; la recherche, l'export et le tableau gèrent l'absence de numéro (#20)
 - Paiements : filtres « type » et « encaisseur » (#11, #12)
 - Dépôt : README, journal des changements, avancement par écran, décisions, modèle de PR et script `npm test` (#14)
 - Dépôt : journal de développement et questions ouvertes (#15)
