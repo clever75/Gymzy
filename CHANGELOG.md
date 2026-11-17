@@ -17,6 +17,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Dashboard : nom et couleur de la salle appliqués à l'interface (#9)
 - Paiements : page « Paiements et recettes » avec journal, filtres, totaux et export CSV réservé à l'administrateur (#10)
 - Paiements : filtres « type » et « encaisseur » (#11, #12)
+- Dépôt : README, journal des changements, avancement par écran, décisions, modèle de PR et script `npm test` (#14)
+- Dépôt : journal de développement et questions ouvertes (#15)
 
 ### Corrigé
 
