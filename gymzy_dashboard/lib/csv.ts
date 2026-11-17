@@ -11,11 +11,18 @@ const NEWLINE = "\r\n";
 // exécuté comme une formule par Excel (« injection CSV »). On le neutralise
 // avec une apostrophe devant.
 const FORMULA_START = /^[=+\-@\t\r]/;
+// Exception : un numéro de téléphone international (« + » puis chiffres et espaces
+// seulement, ex. « +228 90 12 34 56 »). Sans lettre, parenthèse ni opérateur, il ne
+// peut pas déclencher de formule ; sans cette exception, l'apostrophe resterait
+// visible devant chaque numéro dans Excel.
+const SAFE_PHONE = /^\+\d[\d ]*$/;
 
 export function escapeCsvCell(value: string | number): string {
   let text = String(value);
   // Seuls les textes sont neutralisés : un nombre (même négatif) reste tel quel.
-  if (typeof value === "string" && FORMULA_START.test(text)) text = `'${text}`;
+  if (typeof value === "string" && FORMULA_START.test(text) && !SAFE_PHONE.test(text)) {
+    text = `'${text}`;
+  }
   // Guillemets obligatoires si la cellule contient le séparateur, un guillemet
   // ou un saut de ligne ; un guillemet à l'intérieur est doublé.
   if (/[;"\r\n]/.test(text)) text = `"${text.replace(/"/g, '""')}"`;

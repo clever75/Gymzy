@@ -34,14 +34,14 @@
 
   color-scheme: dark;
 }
-   /* Rôles dérivés de --primary : à recalculer partout où --primary est redéfini.
+/* Rôles dérivés de --primary : à recalculer partout où --primary est redéfini.
       Une variable CSS qui en contient une autre est résolue là où elle est
       déclarée. Sans cette règle, --info-surface resterait teintée en lime
       dans le dashboard, même avec la couleur d'une autre salle. */
-   :root,
-   [data-brand] {
-     --info-surface: color-mix(in srgb, var(--primary) 14%, var(--surface));
-   }
+:root,
+[data-brand] {
+  --info-surface: color-mix(in srgb, var(--primary) 14%, var(--surface));
+}
 /* ───────── Pont vers Tailwind ───────── */
 @theme inline {
   --color-background: var(--background);
@@ -65,6 +65,25 @@
   --font-sans: var(--font-figtree), system-ui, sans-serif;
   --font-display: var(--font-bricolage), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* Animation d'apparition des lignes du tableau (liste des membres).
+   Dans @theme, Tailwind crée la classe « animate-row-in » et n'écrit les
+   @keyframes que si la classe est utilisée. Elle s'emploie avec « motion-safe: »
+   pour être coupée si le visiteur demande moins d'animations. */
+@theme {
+  --animate-row-in: row-in 240ms ease-out both;
+
+  @keyframes row-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 /* Styles par défaut : dans @layer base, pour qu'une classe Tailwind
