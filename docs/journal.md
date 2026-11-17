@@ -57,3 +57,16 @@ Le carnet de bord officiel du stage reste le document de l'école : on peut reco
 - **À quoi ça sert :** retrouver où en est le projet, ce qui a changé et pourquoi, et préparer le branchement à l'API.
 - **Ce que j'ai appris :** chaque information a un seul endroit où vivre ; avec la fusion par squash, le titre de la PR devient le message du commit ; écrire une couche d'accès aux données évite de tout réécrire au branchement.
 - **Reste à faire :** compléter le « Pourquoi » de la décision 0001, activer la fusion par squash sur GitHub.
+
+### 17 nov. 2026 · Page Membres (#16, #17, #18, #19)
+
+- **Ce qu'on a fait :** page « Membres » avec recherche (nom, téléphone), puces de statut, pagination à 25 et export CSV. Puis les puces sont devenues exclusives (comme les badges), les tests de la logique ont été ajoutés (dont un test CSV cassé corrigé), et l'export a été ouvert au staff.
+- **À quoi ça sert :** retrouver un membre vite et en exporter la liste, comme l'exige WEB-02. Les règles sont écrites dans des tests : un changement de règle est voulu et visible.
+- **Ce que j'ai appris :** à compléter. (Pistes : une règle qui change doit entraîner son test ; deux PR ouvertes peuvent se contredire, l'ordre de fusion compte ; `git stash` met un travail de côté sans le perdre ; une vérification faite sur la mauvaise branche ne prouve rien.)
+- **Reste à faire :** couche d'accès aux données, `phone` nullable pour les enfants, filtres activité, formule et coach avec tri, export Excel.
+
+### 17 nov. 2026 · Fusion par squash activée
+
+- **Ce qu'on a fait :** réglage GitHub activé, la fusion par squash est possible.
+- **À quoi ça sert :** le titre de la PR devient le message du commit sur `main`, ce qui garde un historique lisible (une PR = un commit).
+- **Ce que j'ai appris :** à compléter.
