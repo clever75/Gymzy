@@ -1,8 +1,8 @@
 // Couche d'accès aux données des membres (ADR 0002).
 // Les pages et les routes passent par ici : elles ne lisent jamais lib/mock directement.
 // Aujourd'hui les données sont factices ; au branchement de l'API, seul ce fichier change.
-import { filterMembers } from "@/lib/member-filters";
-import type { MemberFilters } from "@/lib/member-filters";
+import { filterMembers, listMemberFilterOptions } from "@/lib/member-filters";
+import type { MemberFilterOptions, MemberFilters } from "@/lib/member-filters";
 import { getDisplayStatus } from "@/lib/member-status";
 import type { DisplayStatus } from "@/lib/member-status";
 import { getNow } from "@/lib/mock/clock";
@@ -39,6 +39,11 @@ export async function listMembersForExport(filters: MemberFilters): Promise<Memb
   return filterMembers(mockMembers, filters, (m) => getDisplayStatus(m, now)).map((m) =>
     withStatus(m, now),
   );
+}
+
+/** Valeurs des listes déroulantes (activités, formules, coachs) de toute la salle. */
+export async function getMemberFilterOptions(): Promise<MemberFilterOptions> {
+  return listMemberFilterOptions(mockMembers);
 }
 
 /** Un membre par identifiant, ou null s'il n'existe pas. */

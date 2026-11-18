@@ -19,9 +19,21 @@ export type MemberStatusFilter = (typeof STATUSES)[number][1];
 export interface MemberFilters {
   status: MemberStatusFilter | null;
   q: string;
+  // Activité, formule et coach : le texte tel qu'affiché dans le tableau (USR-03).
+  // Les valeurs viennent des listes déroulantes (listMemberFilterOptions).
+  // Au branchement de l'API, ce seront des identifiants plutôt que des noms.
+  activity: string | null;
+  formula: string | null;
+  coach: string | null;
 }
 
-export const DEFAULT_MEMBER_FILTERS: MemberFilters = { status: null, q: "" };
+export const DEFAULT_MEMBER_FILTERS: MemberFilters = {
+  status: null,
+  q: "",
+  activity: null,
+  formula: null,
+  coach: null,
+};
 
 const MAX_QUERY_LENGTH = 60;
 
@@ -31,20 +43,34 @@ function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+// Texte libre d'un filtre : rogné, limité, et « absent » si vide.
+function optionalText(value: string | string[] | undefined): string | null {
+  const text = (firstValue(value) ?? "").trim().slice(0, MAX_QUERY_LENGTH);
+  return text === "" ? null : text;
+}
+
 // Lit les filtres dans l'adresse. Toute valeur inconnue donne la valeur par défaut.
 export function parseMemberFilters(params: SearchParams): MemberFilters {
   const rawStatus = firstValue(params.statut);
   return {
     status: STATUSES.find(([slug]) => slug === rawStatus)?.[1] ?? null,
     q: (firstValue(params.q) ?? "").trim().slice(0, MAX_QUERY_LENGTH),
+    activity: optionalText(params.activite),
+    formula: optionalText(params.formule),
+    coach: optionalText(params.coach),
   };
 }
 
 // Paires [nom, valeur] des filtres actifs, sans la recherche ni la page.
-// Sert à construire l'adresse et les champs cachés du formulaire de recherche.
+// Sert à construire l'adresse et les champs cachés du formulaire.
 export function activeMemberFilterParams(filters: MemberFilters): [string, string][] {
+  const params: [string, string][] = [];
   const slug = STATUSES.find(([, value]) => value === filters.status)?.[0];
-  return slug ? [["statut", slug]] : [];
+  if (slug) params.push(["statut", slug]);
+  if (filters.activity) params.push(["activite", filters.activity]);
+  if (filters.formula) params.push(["formule", filters.formula]);
+  if (filters.coach) params.push(["coach", filters.coach]);
+  return params;
 }
 
 // Construit la partie « ?… » de l'adresse. Les valeurs par défaut sont omises.
@@ -93,6 +119,34 @@ export function filterMembers(
   getStatus: (member: Member) => DisplayStatus,
 ): Member[] {
   return members.filter(
-    (m) => matchesStatus(m, filters.status, getStatus) && matchesQuery(m, filters.q),
+    (m) =>
+      matchesStatus(m, filters.status, getStatus) &&
+      matchesQuery(m, filters.q) &&
+      // Égalité exacte : la valeur vient d'une liste déroulante (listMemberFilterOptions).
+      (filters.activity === null || m.activity === filters.activity) &&
+      (filters.formula === null || m.formula === filters.formula) &&
+      (filters.coach === null || m.coachName === filters.coach),
   );
+}
+
+export interface MemberFilterOptions {
+  activities: string[];
+  formulas: string[];
+  coaches: string[];
+}
+
+function distinctSorted(values: (string | null)[]): string[] {
+  const texts = values.filter((v): v is string => v !== null && v !== "");
+  return [...new Set(texts)].sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+// Valeurs proposées dans les listes déroulantes : sans doublon, triées,
+// et calculées sur TOUS les membres (pas seulement ceux de la page).
+// Les membres sans coach (null) n'ajoutent rien à la liste des coachs.
+export function listMemberFilterOptions(members: Member[]): MemberFilterOptions {
+  return {
+    activities: distinctSorted(members.map((m) => m.activity)),
+    formulas: distinctSorted(members.map((m) => m.formula)),
+    coaches: distinctSorted(members.map((m) => m.coachName)),
+  };
 }

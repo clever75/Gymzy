@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ExportMembersButton } from "@/components/members/export-members-button";
 import { MembersFilters } from "@/components/members/members-filters";
-import { listMembers } from "@/lib/data/members";
+import { getMemberFilterOptions, listMembers } from "@/lib/data/members";
 import { formatDate } from "@/lib/format";
 import { memberStatusLabels } from "@/lib/labels";
 import { formatMemberName, isChild } from "@/lib/member-display";
@@ -41,7 +41,10 @@ export default async function MembersPage({
 
   // La page ne filtre plus, ne pagine plus et ne calcule plus la date du jour :
   // tout cela est fait par la couche d'accès (ADR 0002).
-  const result = await listMembers(filters, parsePageParam(params.page));
+  const [result, options] = await Promise.all([
+    listMembers(filters, parsePageParam(params.page)),
+    getMemberFilterOptions(),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -59,7 +62,7 @@ export default async function MembersPage({
         </div>
       </header>
 
-      <MembersFilters filters={filters} />
+      <MembersFilters filters={filters} options={options} />
 
       <section aria-label="Liste des membres" className="flex flex-col gap-4">
         <Table aria-label="Liste des membres">
