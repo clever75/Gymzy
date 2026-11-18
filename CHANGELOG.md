@@ -21,6 +21,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Dépôt : journal de développement et questions ouvertes (#15)
 - Membres : page « Membres » avec recherche, puces de statut, pagination à 25 et export CSV (#16)
 - Membres : le staff peut exporter la liste, les coachs non (#19)
+- Membres : fiche membre (WEB-03) avec bandeau (statut, fin de période, prix convenu, carte), six onglets dans l'adresse et historique des périodes d'abonnement ; les boutons « Renouveler », « Modifier » et « ⋮ » sont désactivés avant l'API (#30)
 
 ### Modifié
 
