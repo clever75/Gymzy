@@ -2,21 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { getMember } from "@/lib/data/members";
 import { memberStatusLabels } from "@/lib/labels";
 import { formatMemberName } from "@/lib/member-display";
-import { getDisplayStatus } from "@/lib/member-status";
-import { getNow } from "@/lib/mock/clock";
-import { mockMembers } from "@/lib/mock/members";
 
 export const metadata: Metadata = { title: "Fiche membre · Gymzy" };
 
 // Page provisoire : la fiche complète (WEB-03) viendra ensuite.
 export default async function MemberPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const member = mockMembers.find((m) => m.id === id);
+  const member = await getMember(id);
   if (!member) notFound();
 
-  const status = memberStatusLabels[getDisplayStatus(member, getNow())];
+  const status = memberStatusLabels[member.displayStatus];
 
   return (
     <div className="flex flex-col gap-3">

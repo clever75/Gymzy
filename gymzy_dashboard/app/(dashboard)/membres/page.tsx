@@ -15,14 +15,12 @@ import {
 } from "@/components/ui/table";
 import { ExportMembersButton } from "@/components/members/export-members-button";
 import { MembersFilters } from "@/components/members/members-filters";
+import { listMembers } from "@/lib/data/members";
 import { formatDate } from "@/lib/format";
 import { memberStatusLabels } from "@/lib/labels";
 import { formatMemberName, isChild } from "@/lib/member-display";
-import { buildMembersQuery, filterMembers, parseMemberFilters } from "@/lib/member-filters";
-import { getDisplayStatus } from "@/lib/member-status";
-import { getNow } from "@/lib/mock/clock";
-import { mockMembers } from "@/lib/mock/members";
-import { PAGE_SIZE, paginate, parsePageParam } from "@/lib/paginate";
+import { buildMembersQuery, parseMemberFilters } from "@/lib/member-filters";
+import { parsePageParam } from "@/lib/paginate";
 import { canExportMembers } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
 
@@ -36,20 +34,20 @@ export default async function MembersPage({
 }) {
   const params = await searchParams;
   const filters = parseMemberFilters(params);
-  const now = getNow();
 
   // Confort d'affichage seulement : la route d'export refuse elle-même (403).
   const { role } = await getSession();
   const canExport = canExportMembers(role);
 
-  const filtered = filterMembers(mockMembers, filters, (m) => getDisplayStatus(m, now));
-  const result = paginate(filtered, parsePageParam(params.page), PAGE_SIZE);
+  // La page ne filtre plus, ne pagine plus et ne calcule plus la date du jour :
+  // tout cela est fait par la couche d'accès (ADR 0002).
+  const result = await listMembers(filters, parsePageParam(params.page));
 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <h1 className="text-2xl">
-          Membres <span className="text-foreground-muted tabular-nums">({mockMembers.length})</span>
+          Membres <span className="text-foreground-muted tabular-nums">({result.totalAll})</span>
         </h1>
         <div className="flex flex-wrap items-center gap-3">
           {/* Vers l'écran d'inscription (placeholder pour l'instant). */}
@@ -85,7 +83,7 @@ export default async function MembersPage({
               </TableEmpty>
             ) : (
               result.items.map((member, index) => {
-                const status = memberStatusLabels[getDisplayStatus(member, now)];
+                const status = memberStatusLabels[member.displayStatus];
                 return (
                   <TableRow
                     key={member.id}
