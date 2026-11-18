@@ -28,6 +28,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Membres : filtres par activité, formule et coach (listes déroulantes, export CSV inclus) (#23)
 - Membres : tri des colonnes Membre, Statut et Fin, export CSV dans le même ordre (#24)
 - Membres : export Excel (.xlsx) avec les mêmes filtres et le même tri que le CSV, nouvelle dépendance `write-excel-file` (#25)
+- Paiements : journal aligné sur la maquette (colonnes Réduction et Reçu, totaux espèces / mobile money / carte / réductions), boutons « PDF » et « Relancer » désactivés avant l'API (#27)
 
 ### Corrigé
 

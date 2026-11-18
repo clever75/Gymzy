@@ -35,7 +35,7 @@ export const paymentStatusLabels: Record<PaymentStatus, StatusLabel> = {
 export const paymentMethodLabels: Record<PaymentMethod, string> = {
   CASH: "Espèces",
   MOBILE_MONEY: "Mobile money",
-  CARD: "Carte bancaire",
+  CARD: "Carte",
 };
 
 export const paymentTypeLabels: Record<PaymentType, string> = {

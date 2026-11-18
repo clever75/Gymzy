@@ -36,7 +36,7 @@ export interface PaymentFilters {
   method: PaymentMethod | null;
   status: StatusFilter | null;
   type: PaymentType | null;
-  // Nom de l'encaisseur (colonne « Encaissé par »). Texte libre : la liste
+  // Nom de l'encaisseur (colonne « Encaisseur »). Texte libre : la liste
   // des personnes dépend de la salle, elle n'est pas figée dans le code.
   collector: string | null;
   q: string;
@@ -177,20 +177,28 @@ export function listCollectors(payments: Payment[]): string[] {
 
 // ── Totaux ──────────────────────────────────────────────────────────────
 export interface PaymentTotals {
-  collected: number; // total encaissé = cash + online
+  collected: number; // total encaissé = espèces + mobile money + carte
   cash: number; // espèces
-  online: number; // mobile money + carte
-  discounts: number; // réductions accordées
+  mobileMoney: number; // mobile money
+  card: number; // carte
+  discounts: number; // réductions accordées (PAY-10)
 }
 
 // Seuls les paiements confirmés (COMPLETED) comptent comme encaissés.
 export function computePaymentTotals(payments: Payment[]): PaymentTotals {
-  const totals: PaymentTotals = { collected: 0, cash: 0, online: 0, discounts: 0 };
+  const totals: PaymentTotals = {
+    collected: 0,
+    cash: 0,
+    mobileMoney: 0,
+    card: 0,
+    discounts: 0,
+  };
   for (const p of payments) {
     if (p.status !== "COMPLETED") continue;
     totals.collected += p.amountFinal;
     if (p.method === "CASH") totals.cash += p.amountFinal;
-    else totals.online += p.amountFinal;
+    else if (p.method === "MOBILE_MONEY") totals.mobileMoney += p.amountFinal;
+    else totals.card += p.amountFinal;
     totals.discounts += p.discount;
   }
   return totals;
