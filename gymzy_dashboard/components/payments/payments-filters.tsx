@@ -125,7 +125,7 @@ export function PaymentsFilters({
           <input key={name} type="hidden" name={name} value={value} />
         ))}
         <label htmlFor="filtre-encaisse" className="mr-1 text-sm font-bold text-foreground-muted">
-          Encaissé par
+          Encaisseur
         </label>
         <Select id="filtre-encaisse" name="encaisse" defaultValue={filters.collector ?? ""}>
           <option value="">Tous les encaisseurs</option>

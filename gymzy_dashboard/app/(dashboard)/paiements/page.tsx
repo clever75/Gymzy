@@ -23,6 +23,7 @@ import { getPaymentCollectors, listPayments } from "@/lib/data/payments";
 import { parsePageParam } from "@/lib/paginate";
 import { buildPaymentsQuery, parsePaymentFilters } from "@/lib/payment-filters";
 import { PaymentsFilters } from "@/components/payments/payments-filters";
+import { ReceiptCell } from "@/components/payments/receipt-cell";
 import { ExportPaymentsButton } from "@/components/payments/export-payments-button";
 import { canExportPayments } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
@@ -63,15 +64,12 @@ export default async function PaymentsPage({
 
       <section
         aria-label="Totaux des paiements affichés"
-        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
       >
         <StatCard highlight label="Total encaissé" value={formatFcfa(totals.collected)} />
         <StatCard label="Espèces" value={formatFcfa(totals.cash)} />
-        <StatCard
-          label="En ligne"
-          value={formatFcfa(totals.online)}
-          hint="Mobile money et carte"
-        />
+        <StatCard label="Mobile money" value={formatFcfa(totals.mobileMoney)} />
+        <StatCard label="Carte" value={formatFcfa(totals.card)} />
         <StatCard
           label="Réductions"
           value={formatFcfa(totals.discounts)}
@@ -80,21 +78,25 @@ export default async function PaymentsPage({
       </section>
 
       <section aria-label="Journal des paiements" className="flex flex-col gap-4">
-        <Table aria-label="Journal des paiements">
+        {/* Neuf colonnes (maquette WEB-05) : espacement réduit pour tenir à 1280 px sans défilement.
+            En dessous, la table défile à l'intérieur de son cadre (utilisable dès 768 px). */}
+        <Table aria-label="Journal des paiements" className="[&_td]:px-3 [&_th]:px-3">
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Membre</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Mode</TableHead>
               <TableHead className="text-right">Montant</TableHead>
+              <TableHead className="text-right">Réduction</TableHead>
+              <TableHead>Mode</TableHead>
+              <TableHead>Encaisseur</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>Encaissé par</TableHead>
+              <TableHead>Reçu</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {result.items.length === 0 ? (
-              <TableEmpty colSpan={7}>
+              <TableEmpty colSpan={9}>
                 <p>Aucun paiement pour ces filtres.</p>
                 <Link href="/paiements" className="mt-2 inline-block font-bold text-primary underline">
                   Réinitialiser les filtres
@@ -111,26 +113,28 @@ export default async function PaymentsPage({
                         {formatTime(payment.createdAt)}
                       </span>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">{payment.memberName}</TableCell>
+                    {/* Pas de « nowrap » : un nom long peut passer sur deux lignes si la place manque. */}
+                    <TableCell>{payment.memberName}</TableCell>
                     <TableCell className="whitespace-nowrap">
                       {paymentTypeLabels[payment.type]}
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap tabular-nums">
+                      {formatFcfa(payment.amountFinal)}
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap tabular-nums">
+                      {payment.discount > 0 ? formatFcfa(payment.discount) : ""}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {paymentMethodLabels[payment.method]}
                     </TableCell>
-                    <TableCell className="text-right whitespace-nowrap tabular-nums">
-                      {formatFcfa(payment.amountFinal)}
-                      {payment.discount > 0 && (
-                        <span className="block text-xs text-foreground-muted">
-                          réduction {formatFcfa(payment.discount)}
-                        </span>
-                      )}
+                    <TableCell className="whitespace-nowrap">
+                      {payment.confirmedBy ?? "—"}
                     </TableCell>
                     <TableCell>
                       <Badge variant={status.tone}>{status.label}</Badge>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {payment.confirmedBy ?? "—"}
+                    <TableCell>
+                      <ReceiptCell status={payment.status} />
                     </TableCell>
                   </TableRow>
                 );

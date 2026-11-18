@@ -132,21 +132,25 @@ test("liste des encaisseurs : sans doublon, sans null, triée", () => {
   assert.deepEqual(listCollectors([]), []);
 });
 
-test("totaux : seuls les paiements confirmés comptent, encaissé = espèces + en ligne", () => {
+test("totaux : seuls les paiements confirmés comptent, encaissé = espèces + mobile money + carte", () => {
   const month = computePaymentTotals(run({ period: "mois" }));
-  assert.deepEqual(month, { collected: 27000, cash: 15000, online: 12000, discounts: 3000 });
+  assert.deepEqual(month, {
+    collected: 27000, cash: 15000, mobileMoney: 12000, card: 0, discounts: 3000,
+  });
   const all = computePaymentTotals(DATA);
-  assert.deepEqual(all, { collected: 102000, cash: 20000, online: 82000, discounts: 3000 });
-  assert.equal(all.collected, all.cash + all.online);
+  assert.deepEqual(all, {
+    collected: 102000, cash: 20000, mobileMoney: 32000, card: 50000, discounts: 3000,
+  });
+  assert.equal(all.collected, all.cash + all.mobileMoney + all.card);
 });
 
 test("totaux : suivent la liste filtrée", () => {
   assert.deepEqual(
     computePaymentTotals(run({ period: "tout", collector: "Akua" })),
-    { collected: 15000, cash: 15000, online: 0, discounts: 0 }, // l'id 7 est PROCESSING : non compté
+    { collected: 15000, cash: 15000, mobileMoney: 0, card: 0, discounts: 0 }, // l'id 7 est PROCESSING : non compté
   );
   assert.deepEqual(
     computePaymentTotals(run({ period: "tout", status: "PENDING" })),
-    { collected: 0, cash: 0, online: 0, discounts: 0 },
+    { collected: 0, cash: 0, mobileMoney: 0, card: 0, discounts: 0 },
   );
 });
