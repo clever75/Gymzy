@@ -98,3 +98,10 @@ Le carnet de bord officiel du stage reste le document de l'école : on peut reco
 - **À quoi ça sert :** avancer WEB-03 sans attendre l'API : la page lit ses données par la couche d'accès, donc le branchement ne changera qu'un fichier. On garde `Member` pour la liste et on ajoute un type de détail, car l'API aura deux routes.
 - **Ce que j'ai appris :** à compléter. (Pistes : une ligne de liste et une fiche complète n'ont pas les mêmes données, donc pas le même type ; un onglet dans l'adresse se partage et revient en arrière ; on désactive une action qui écrit au lieu de faire semblant ; les fonctions pures d'onglet et de période se testent sans lancer l'application.)
 - **Reste à faire :** onglets Paiements, Séances, Famille, Carte et passages, Journal, actions de la fiche, branchement à l'API. Questions ouvertes n° 11 et 12.
+
+### 18 nov. 2026 · Fiche membre : onglet Paiements (#31)
+
+- **Ce qu'on a fait :** nouvelle fonction `listMemberPayments` dans `lib/data/payments.ts`, qui renvoie les paiements d'un seul membre, du plus récent au plus ancien, paginés à 25. L'onglet `?onglet=paiements` affiche Date, Type, Montant, Réduction, Mode (avec l'encaisseur), Statut et Reçu, en réutilisant le composant `ReceiptCell` du journal. La page de la fiche ne lit les paiements que si cet onglet est ouvert. Une question ouverte ajoutée (n° 13).
+- **À quoi ça sert :** retrouver l'historique des paiements d'un membre depuis sa fiche (USR-04), y compris un paiement échoué ou en attente à relancer (PAY-05). L'API aura une route distincte de la liste globale : seule la couche de données changera.
+- **Ce que j'ai appris :** à compléter. (Pistes : réutiliser un composant existant garde deux écrans cohérents ; l'onglet « Abonnements » montre les périodes payées, l'onglet « Paiements » toutes les transactions, ce n'est pas la même liste ; ne charger que ce que l'onglet ouvert affiche.)
+- **Reste à faire :** onglets Séances, Famille, Carte et passages, Journal, actions de la fiche, branchement à l'API. Données factices d'Ama Kofi : à harmoniser avec ses périodes (paiement du 5 oct. non reflété dans sa fin de période). Question ouverte n° 13.
