@@ -16,12 +16,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Dashboard : menu latéral selon le rôle et les modules actifs de la salle (#8)
 - Dashboard : nom et couleur de la salle appliqués à l'interface (#9)
 - Paiements : page « Paiements et recettes » avec journal, filtres, totaux et export CSV réservé à l'administrateur (#10)
-- Membres : un enfant n'a plus le numéro de son parent comme téléphone ; la recherche, l'export et le tableau gèrent l'absence de numéro (#20)
 - Paiements : filtres « type » et « encaisseur » (#11, #12)
 - Dépôt : README, journal des changements, avancement par écran, décisions, modèle de PR et script `npm test` (#14)
 - Dépôt : journal de développement et questions ouvertes (#15)
 - Membres : page « Membres » avec recherche, puces de statut, pagination à 25 et export CSV (#16)
 - Membres : le staff peut exporter la liste, les coachs non (#19)
+
+### Modifié
+
+- Membres : la page, l'export et la fiche passent par une couche d'accès aux données (`lib/data/members.ts`), sans changement d'affichage (#21)
 
 ### Corrigé
 
@@ -29,3 +32,4 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Paiements : totaux calculés sur la liste filtrée (#13)
 - Membres : les puces de statut sont exclusives, alignées sur les badges du tableau (#17)
 - Tests : couverture des filtres et de l'export des membres, test CSV du téléphone corrigé (#18)
+- Membres : un enfant n'a plus le numéro de son parent comme téléphone ; la recherche, l'export et le tableau gèrent l'absence de numéro (#20)
