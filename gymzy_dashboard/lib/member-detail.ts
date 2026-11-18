@@ -1,6 +1,6 @@
 // Logique de la fiche membre (WEB-03) sans React : onglets et libellés de période.
-// Fonctions pures, testées dans member-detail.test.mjs.
-import { formatDate, formatDateShort } from "./format.ts";
+// Fonctions pures, sans import d'exécution : elles se testent avec Node.
+// Les formats de date viennent de l'appelant (comme les libellés dans les exports).
 
 // Les six onglets de la maquette, dans l'ordre.
 export const MEMBER_TABS = [
@@ -43,13 +43,23 @@ export function buildMemberPaymentsHref(memberId: string, page: number): string 
   return page > 1 ? `${base}&page=${page}` : base;
 }
 
+/** Les deux formats de date que nécessite une période : `formatDate` (avec année) et `formatDateShort` (sans année). */
+export interface PeriodDateFormats {
+  date: (iso: string) => string;
+  dateShort: (iso: string) => string;
+}
+
 /**
  * « 28 sept. → 28 oct. » : l'année n'apparaît que si la période change d'année.
  * Ex. « 28 déc. 2026 → 27 janv. 2027 ».
  */
-export function formatPeriodRange(startDate: string, endDate: string): string {
+export function formatPeriodRange(
+  startDate: string,
+  endDate: string,
+  formats: PeriodDateFormats,
+): string {
   const startYear = startDate.slice(0, 4);
   const endYear = endDate.slice(0, 4);
-  if (startYear !== endYear) return `${formatDate(startDate)} → ${formatDate(endDate)}`;
-  return `${formatDateShort(startDate)} → ${formatDateShort(endDate)}`;
+  if (startYear !== endYear) return `${formats.date(startDate)} → ${formats.date(endDate)}`;
+  return `${formats.dateShort(startDate)} → ${formats.dateShort(endDate)}`;
 }

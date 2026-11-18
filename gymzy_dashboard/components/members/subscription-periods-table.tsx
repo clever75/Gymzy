@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatFcfa } from "@/lib/format";
+import { formatDate, formatDateShort, formatFcfa } from "@/lib/format";
 import { paymentMethodLabels } from "@/lib/labels";
 import { formatPeriodRange } from "@/lib/member-detail";
 import type { SubscriptionPeriod } from "@/lib/types";
@@ -43,7 +43,10 @@ export function SubscriptionPeriodsTable({ periods }: { periods: SubscriptionPer
           periods.map((period) => (
             <TableRow key={period.id}>
               <TableCell className="whitespace-nowrap">
-                {formatPeriodRange(period.startDate, period.endDate)}
+                {formatPeriodRange(period.startDate, period.endDate, {
+                  date: formatDate,
+                  dateShort: formatDateShort,
+                })}
               </TableCell>
               <TableCell className="whitespace-nowrap">{period.formula}</TableCell>
               <TableCell>{period.paidByName}</TableCell>

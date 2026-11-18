@@ -2,6 +2,7 @@
 // Lancer : node --test lib/member-detail.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { formatDate, formatDateShort } from "./format.ts";
 import {
   MEMBER_TABS,
   buildMemberPaymentsHref,
@@ -10,6 +11,9 @@ import {
   memberTabLabels,
   parseMemberTab,
 } from "./member-detail.ts";
+
+// Les formats viennent de l'appelant : ici, les vrais, comme dans la page.
+const formats = { date: formatDate, dateShort: formatDateShort };
 
 test("onglet : valeur connue", () => {
   assert.equal(parseMemberTab("famille"), "famille");
@@ -47,12 +51,12 @@ test("adresse d'une page de paiements : les pages suivantes ajoutent ?page", () 
 });
 
 test("période dans la même année : sans année", () => {
-  assert.equal(formatPeriodRange("2026-09-28", "2026-10-28"), "28 sept. → 28 oct.");
+  assert.equal(formatPeriodRange("2026-09-28", "2026-10-28", formats), "28 sept. → 28 oct.");
 });
 
 test("période à cheval sur deux années : avec les années", () => {
   assert.equal(
-    formatPeriodRange("2026-12-28", "2027-01-27"),
+    formatPeriodRange("2026-12-28", "2027-01-27", formats),
     "28 déc. 2026 → 27 janv. 2027",
   );
 });
