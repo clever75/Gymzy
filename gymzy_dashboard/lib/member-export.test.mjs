@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildCsv } from "./csv.ts";
-import { MEMBER_EXPORT_HEADERS, membersToCsvRows } from "./member-export.ts";
+import { MEMBER_EXPORT_HEADERS, membersToCsvRows, membersToSheetRows } from "./member-export.ts";
 import { formatMemberName, isChild } from "./member-display.ts";
 
 const context = {
@@ -56,4 +56,24 @@ test("affichage du nom : nom de famille en majuscules ; enfant = a un parent", (
   assert.equal(formatMemberName(member), "Ama KOFI");
   assert.equal(isChild(member), false);
   assert.equal(isChild({ guardianName: "Ama Kofi" }), true);
+});
+
+test("Excel : mêmes colonnes que le CSV, mais « Fin » est une vraie date", () => {
+  const [csv] = membersToCsvRows([member], context);
+  const [sheet] = membersToSheetRows([member], context);
+  assert.equal(sheet.length, MEMBER_EXPORT_HEADERS.length);
+  for (const i of [0, 1, 2, 3, 4, 5, 6, 8]) assert.equal(sheet[i], csv[i], `colonne ${i}`);
+  assert.ok(sheet[7] instanceof Date);
+  assert.equal(sheet[7].toISOString(), "2026-10-28T00:00:00.000Z");
+});
+
+test("Excel : pas de date de fin ou pas de téléphone = cellule vide", () => {
+  const [row] = membersToSheetRows([{ ...member, endDate: null, phone: null }], context);
+  assert.equal(row[7], null);
+  assert.equal(row[2], "");
+});
+
+test("Excel : une date et heure complète est gardée telle quelle", () => {
+  const [row] = membersToSheetRows([{ ...member, endDate: "2026-10-28T10:30:00Z" }], context);
+  assert.equal(row[7].toISOString(), "2026-10-28T10:30:00.000Z");
 });

@@ -10,7 +10,7 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Écran | État | Ce qui manque |
 |---|---|---|
 | WEB-01 Tableau de bord | À faire | Page vide (placeholder) |
-| WEB-02 Membres | En cours (données factices) | Liste, recherche, puces de statut, pagination et export CSV (admin et staff) sont faits. Un enfant n'a pas de téléphone propre (USR-02). La page, l'export et la fiche passent par la couche d'accès aux données (ADR 0002). Les filtres activité, formule et coach sont faits (USR-03). Le tri des colonnes Membre, Statut et Fin est fait (USR-03). Reste : export Excel (DASH-03), branchement API |
+| WEB-02 Membres | En cours (données factices) | Liste, recherche, puces de statut, pagination et export CSV (admin et staff) sont faits. Un enfant n'a pas de téléphone propre (USR-02). La page, l'export et la fiche passent par la couche d'accès aux données (ADR 0002). Les filtres activité, formule et coach sont faits (USR-03). Le tri des colonnes Membre, Statut et Fin est fait (USR-03). L'export Excel des membres est fait (DASH-03, ADR 0003). Reste : branchement API |
 | WEB-03 Fiche membre | À faire | Page provisoire (le lien depuis la liste existe) |
 | WEB-04 Activités et formules | À faire | Page vide |
 | WEB-05 Paiements et recettes | Fait (données factices) | Tri des colonnes, export Excel (règle du cahier §8.2), confirmation des actions sensibles, couche d'accès aux données (ADR 0002), branchement API |
@@ -30,6 +30,6 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Connexion (AUTH-05) | À faire | La session actuelle est factice (`lib/session.ts`) |
 | Couche d'accès aux données | En cours | Faite pour les membres (`lib/data/members.ts`). WEB-05 lit encore les données factices directement : à reprendre dans une PR à part. |
 | Branchement à l'API | À faire | Après la couche d'accès aux données |
-| Tests | En cours | 60 tests de logique pure. La couche d'accès n'est pas testée directement. Pas de tests de composants ni de bout en bout. |
+| Tests | En cours | 71 tests de logique pure. La couche d'accès n'est pas testée directement. Pas de tests de composants ni de bout en bout. |
 | Accessibilité | À auditer | Contrastes, clavier, libellés |
 | Utilisable dès 768 px | À vérifier | Conçu pour 1280 px et plus |
