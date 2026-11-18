@@ -22,6 +22,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Membres : page « Membres » avec recherche, puces de statut, pagination à 25 et export CSV (#16)
 - Membres : le staff peut exporter la liste, les coachs non (#19)
 - Membres : fiche membre (WEB-03) avec bandeau (statut, fin de période, prix convenu, carte), six onglets dans l'adresse et historique des périodes d'abonnement ; les boutons « Renouveler », « Modifier » et « ⋮ » sont désactivés avant l'API (#30)
+- Membres : onglet « Paiements » de la fiche membre, avec toutes les transactions du membre (payées, en attente, échouées, remboursées), paginées à 25 ; les boutons « PDF » et « Relancer » sont désactivés avant l'API (#31)
 
 ### Modifié
 
@@ -39,3 +40,4 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Membres : les puces de statut sont exclusives, alignées sur les badges du tableau (#17)
 - Tests : couverture des filtres et de l'export des membres, test CSV du téléphone corrigé (#18)
 - Membres : un enfant n'a plus le numéro de son parent comme téléphone ; la recherche, l'export et le tableau gèrent l'absence de numéro (#20)
+- Dashboard : `npm run build` aboutit de nouveau ; `lib/member-detail.ts` n'importe plus `format.ts` avec l'extension `.ts`, que TypeScript refusait depuis la PR #30 (#31)

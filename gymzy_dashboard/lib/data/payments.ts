@@ -6,6 +6,7 @@ import { mockPayments } from "@/lib/mock/payments";
 import { paginate } from "@/lib/paginate";
 import type { Page } from "@/lib/paginate";
 import {
+  DEFAULT_PAYMENT_SORT,
   computePaymentTotals,
   filterPayments,
   listCollectors,
@@ -33,4 +34,14 @@ export async function listPaymentsForExport(filters: PaymentFilters): Promise<Pa
 /** Noms des encaisseurs de toute la salle, pour la liste déroulante (pas seulement la page). */
 export async function getPaymentCollectors(): Promise<string[]> {
   return listCollectors(mockPayments);
+}
+
+/**
+ * Les paiements d'un seul membre (onglet « Paiements » de la fiche, WEB-03), du plus récent au plus ancien.
+ * Tous les statuts y sont : un paiement échoué ou en attente doit rester visible pour être relancé.
+ * Pas de filtre de période : l'historique est complet. L'API aura une route distincte de la liste globale.
+ */
+export async function listMemberPayments(memberId: string, page: number): Promise<Page<Payment>> {
+  const own = mockPayments.filter((p) => p.memberId === memberId);
+  return paginate(sortPayments(own, DEFAULT_PAYMENT_SORT), page);
 }
