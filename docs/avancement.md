@@ -13,7 +13,7 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | WEB-02 Membres | En cours (données factices) | Liste, recherche, puces de statut, pagination et export CSV (admin et staff) sont faits. Un enfant n'a pas de téléphone propre (USR-02). La page, l'export et la fiche passent par la couche d'accès aux données (ADR 0002). Les filtres activité, formule et coach sont faits (USR-03). Le tri des colonnes Membre, Statut et Fin est fait (USR-03). L'export Excel des membres est fait (DASH-03, ADR 0003). Reste : branchement API |
 | WEB-03 Fiche membre | À faire | Page provisoire (le lien depuis la liste existe) |
 | WEB-04 Activités et formules | À faire | Page vide |
-| WEB-05 Paiements et recettes | Fait (données factices) | Tri des colonnes, export Excel (règle du cahier §8.2), confirmation des actions sensibles, couche d'accès aux données (ADR 0002), branchement API |
+| WEB-05 Paiements et recettes | Fait (données factices) | Tri des colonnes, export Excel (règle du cahier §8.2), confirmation des actions sensibles, écarts avec la maquette, branchement API. La page et l'export passent par la couche d'accès aux données (ADR 0002) |
 | WEB-06 Cartes et accès | À faire | Page vide, module `membershipCard` |
 | WEB-07 Média | À faire | Page vide, module `media` |
 | WEB-08 Événements | À faire | Page vide, module `ticketing` |
@@ -28,7 +28,7 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Menu par rôle et modules actifs | Fait (données factices) | Masque seulement les liens : la vraie protection sera côté API |
 | Identité de la salle (nom, couleur) | Fait (données factices) | Le logo n'est pas encore affiché |
 | Connexion (AUTH-05) | À faire | La session actuelle est factice (`lib/session.ts`) |
-| Couche d'accès aux données | En cours | Faite pour les membres (`lib/data/members.ts`). WEB-05 lit encore les données factices directement : à reprendre dans une PR à part. |
+| Couche d'accès aux données | Fait | Membres (`lib/data/members.ts`) et paiements (`lib/data/payments.ts`). Seule la page de démonstration `/design` lit encore `lib/mock`. |
 | Branchement à l'API | À faire | Après la couche d'accès aux données |
 | Tests | En cours | 71 tests de logique pure. La couche d'accès n'est pas testée directement. Pas de tests de composants ni de bout en bout. |
 | Accessibilité | À auditer | Contrastes, clavier, libellés |

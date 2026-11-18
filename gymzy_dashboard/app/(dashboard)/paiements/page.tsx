@@ -19,16 +19,9 @@ import {
   paymentTypeLabels,
   periodLabels,
 } from "@/lib/labels";
-import { getNow } from "@/lib/mock/clock";
-import { mockPayments } from "@/lib/mock/payments";
-import { PAGE_SIZE, paginate, parsePageParam } from "@/lib/paginate";
-import {
-  buildPaymentsQuery,
-  computePaymentTotals,
-  filterPayments,
-  listCollectors,
-  parsePaymentFilters,
-} from "@/lib/payment-filters";
+import { getPaymentCollectors, listPayments } from "@/lib/data/payments";
+import { parsePageParam } from "@/lib/paginate";
+import { buildPaymentsQuery, parsePaymentFilters } from "@/lib/payment-filters";
 import { PaymentsFilters } from "@/components/payments/payments-filters";
 import { ExportPaymentsButton } from "@/components/payments/export-payments-button";
 import { canExportPayments } from "@/lib/permissions";
@@ -44,20 +37,17 @@ export default async function PaymentsPage({
 }) {
   const params = await searchParams;
   const filters = parsePaymentFilters(params);
-  const now = getNow();
 
   // Sur tous les paiements (pas les filtrés) : la liste ne rétrécit pas quand on filtre.
-  const collectors = listCollectors(mockPayments);
+  const collectors = await getPaymentCollectors();
 
   // Confort d'affichage seulement : la route d'export refuse elle-même (403).
   const { role } = await getSession();
   const canExport = canExportPayments(role);
 
-  // Une seule liste filtrée alimente le tableau ET les totaux : ils ne peuvent plus diverger.
   // Les totaux portent sur toutes les pages (pas seulement la page affichée).
-  const filtered = filterPayments(mockPayments, filters, now);
-  const totals = computePaymentTotals(filtered);
-  const result = paginate(filtered, parsePageParam(params.page), PAGE_SIZE);
+  const result = await listPayments(filters, parsePageParam(params.page));
+  const totals = result.totals;
 
   return (
     <div className="flex flex-col gap-6">

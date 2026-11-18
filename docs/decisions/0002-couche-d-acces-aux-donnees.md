@@ -1,6 +1,6 @@
 # 0002. Couche d'accès aux données
 
-Date : 17 nov. 2026 · Statut : Acceptée (pas encore appliquée à WEB-05)
+Date : 17 nov. 2026 · Statut : Acceptée (appliquée aux membres et à WEB-05)
 
 ## Contexte
 
@@ -36,6 +36,6 @@ Règles :
 
 ## Conséquences
 
-- WEB-05 devra être adaptée (ticket à créer). C'est une petite refonte, sans changement visible.
+- WEB-05 a été adaptée (`lib/data/payments.ts`) : refonte sans changement visible.
 - Chaque nouvel écran (WEB-02, 03...) est écrit directement avec cette couche.
 - Le moment venu, `lib/mock/` pourra être supprimé sans toucher aux pages.
