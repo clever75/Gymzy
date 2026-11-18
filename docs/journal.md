@@ -92,3 +92,9 @@ Le carnet de bord officiel du stage reste le document de l'école : on peut reco
 - **Ce que j'ai appris :** à compléter. (Pistes : comparer un écran à la maquette et au texte du cahier, qui peuvent dire des choses différentes ; vérifier la mise en page avec une capture à 1280 px, car un test ne voit pas une colonne coupée ; pour une colonne qui a déjà un ordre par défaut, le cycle des clics doit en tenir compte.)
 - **Reste à faire :** export Excel des paiements, choix de dates « Période… », filtre par formule, confirmation des actions sensibles, branchement à l'API. Questions ouvertes n° 9 (colonne « Reçu ») et n° 10 (colonnes triables).
 
+### 18 nov. 2026 · Fiche membre : socle et onglet Abonnements (#30)
+
+- **Ce qu'on a fait :** nouveaux types `SubscriptionPeriod` et `MemberDetail`, données factices de la fiche (le cas d'Ama Kofi de la maquette) et `getMemberDetail` dans `lib/data/members.ts`. La page `/membres/[id]` affiche l'en-tête, le bandeau (statut, fin de période, prix convenu, carte), les six onglets dans l'adresse (`?onglet=`) et le tableau des périodes (ABO-09). Les boutons « Renouveler », « Modifier » et « ⋮ » sont désactivés. Deux questions ouvertes ajoutées (n° 11 et 12).
+- **À quoi ça sert :** avancer WEB-03 sans attendre l'API : la page lit ses données par la couche d'accès, donc le branchement ne changera qu'un fichier. On garde `Member` pour la liste et on ajoute un type de détail, car l'API aura deux routes.
+- **Ce que j'ai appris :** à compléter. (Pistes : une ligne de liste et une fiche complète n'ont pas les mêmes données, donc pas le même type ; un onglet dans l'adresse se partage et revient en arrière ; on désactive une action qui écrit au lieu de faire semblant ; les fonctions pures d'onglet et de période se testent sans lancer l'application.)
+- **Reste à faire :** onglets Paiements, Séances, Famille, Carte et passages, Journal, actions de la fiche, branchement à l'API. Questions ouvertes n° 11 et 12.

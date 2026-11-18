@@ -6,16 +6,23 @@ import type { MemberFilterOptions, MemberFilters } from "@/lib/member-filters";
 import { getDisplayStatus } from "@/lib/member-status";
 import type { DisplayStatus } from "@/lib/member-status";
 import { getNow } from "@/lib/mock/clock";
+import { mockMemberDetails } from "@/lib/mock/member-details";
 import { mockMembers } from "@/lib/mock/members";
 import { paginate } from "@/lib/paginate";
 import type { Page } from "@/lib/paginate";
-import type { Member } from "@/lib/types";
+import type { Member, MemberDetailExtras } from "@/lib/types";
 
 /** Un membre avec son statut tel qu'il s'affiche (« Expire bientôt » inclus). */
 export type MemberWithStatus = Member & { displayStatus: DisplayStatus };
 
 /** Une page de membres, plus le total sans filtre pour « Membres (N) ». */
 export type MembersPage = Page<MemberWithStatus> & { totalAll: number };
+
+/** Une fiche complète avec son statut tel qu'il s'affiche. */
+export type MemberDetailWithStatus = MemberWithStatus & MemberDetailExtras;
+
+/** Membre sans entrée dans le mock : aucun prix convenu, pas de carte, pas d'historique. */
+const NO_EXTRAS: MemberDetailExtras = { agreedPrice: null, cardNumber: null, periods: [] };
 
 function withStatus(member: Member, now: Date): MemberWithStatus {
   return { ...member, displayStatus: getDisplayStatus(member, now) };
@@ -54,4 +61,11 @@ export async function getMemberFilterOptions(): Promise<MemberFilterOptions> {
 export async function getMember(id: string): Promise<MemberWithStatus | null> {
   const member = mockMembers.find((m) => m.id === id);
   return member ? withStatus(member, getNow()) : null;
+}
+
+/** La fiche complète d'un membre, ou null s'il n'existe pas. L'API aura une route distincte de la liste. */
+export async function getMemberDetail(id: string): Promise<MemberDetailWithStatus | null> {
+  const member = mockMembers.find((m) => m.id === id);
+  if (!member) return null;
+  return { ...withStatus(member, getNow()), ...(mockMemberDetails[id] ?? NO_EXTRAS) };
 }

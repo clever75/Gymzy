@@ -61,3 +61,16 @@ export function formatDateNumeric(value: Date | string): string {
   if (Number.isNaN(date.getTime())) return "—";
   return numericDate.format(date);
 }
+
+const dayMonth = new Intl.DateTimeFormat("fr-FR", {
+  day: "numeric",
+  month: "short",
+  timeZone: DEFAULT_TIME_ZONE,
+});
+
+// "2026-09-28" -> "28 sept." (sans l'année : pour les périodes d'abonnement, où l'année se déduit)
+export function formatDateShort(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return dayMonth.format(date);
+}

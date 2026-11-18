@@ -37,3 +37,26 @@ export interface Payment {
   status: PaymentStatus;
   confirmedBy: string | null;  // staff qui a encaissé (espèces seulement)
 }
+
+/** Une période payée d'un abonnement (ABO-09) : une ligne de l'onglet « Abonnements » (WEB-03). */
+export interface SubscriptionPeriod {
+  id: string;
+  startDate: string;           // date seule ISO, "2026-09-28"
+  endDate: string;             // date seule ISO, "2026-10-28"
+  formula: string;             // formule payée, ex. "Mensuel"
+  paidByName: string;          // le payeur peut différer du membre (un parent paie pour son enfant, FAM-04)
+  amount: number;              // entier, FCFA : ce qui a été payé, réduction déduite
+  method: PaymentMethod;
+  confirmedBy: string | null;  // staff qui a encaissé (espèces seulement), comme Payment.confirmedBy
+  paymentId: string | null;    // Payment.id lié : servira au reçu (PAY-07) et à l'onglet Paiements
+}
+
+/** Ce que la fiche (WEB-03) ajoute à la ligne de liste `Member` (WEB-02). */
+export interface MemberDetailExtras {
+  agreedPrice: number | null;     // prix convenu (ABO-05), FCFA ; null = aucun
+  cardNumber: string | null;      // ex. "GZ-000482" ; null tant que CARD-01 n'existe pas
+  periods: SubscriptionPeriod[];  // du plus récent au plus ancien
+}
+
+/** La fiche complète d'un membre. `Member` reste la ligne de liste, légère. */
+export type MemberDetail = Member & MemberDetailExtras;
