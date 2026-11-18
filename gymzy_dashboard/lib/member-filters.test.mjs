@@ -9,6 +9,9 @@ import {
   filterMembers,
   DEFAULT_MEMBER_FILTERS,
   listMemberFilterOptions,
+  sortMembers,
+  nextMemberSort,
+  DEFAULT_MEMBER_SORT,
 } from "./member-filters.ts";
 
 // Filtres complets : on ne précise que ce qui change par rapport aux valeurs par défaut.
@@ -174,4 +177,91 @@ test("listes déroulantes : sans doublon, sans null, triées à la française", 
     coaches: ["Kossi A.", "Mme Dede"],
   });
   assert.deepEqual(listMemberFilterOptions([]), { activities: [], formulas: [], coaches: [] });
+});
+
+// --- Tri (USR-03) ---
+const sm = (id, firstName, lastName, status, endDate) => ({
+  ...m(id, firstName, lastName, "+228 90 00 00 0" + id, status),
+  endDate,
+});
+const liste = [
+  sm("1", "Yao", "Mensah", "ACTIVE", "2026-11-14"),
+  sm("2", "Ama", "Kofi", "EXPIRED", "2026-09-20"),
+  sm("3", "Kodjo", "Agbé", "PENDING", null),
+  sm("4", "Efua", "Adjo", "ACTIVE", "2026-10-09"),
+  sm("5", "Abla", "Zorro", "ACTIVE", null),
+];
+// Faux statut affiché : le membre « 4 » expire bientôt.
+const statutAffiche = (x) => (x.id === "4" ? "EXPIRING_SOON" : x.status);
+const trier = (key, direction) =>
+  ids(sortMembers(liste, { key, direction }, statutAffiche));
+
+test("parse tri : valeurs valides, ordre par défaut croissant", () => {
+  assert.deepEqual(parseMemberFilters({ tri: "fin", ordre: "desc" }).sort, { key: "endDate", direction: "desc" });
+  assert.deepEqual(parseMemberFilters({ tri: "statut" }).sort, { key: "status", direction: "asc" });
+  assert.deepEqual(parseMemberFilters({ tri: "nom", ordre: "n'importe quoi" }).sort, { key: "name", direction: "asc" });
+});
+
+test("parse tri : valeur absente, inconnue ou piégée = ordre par défaut", () => {
+  assert.deepEqual(parseMemberFilters({}).sort, DEFAULT_MEMBER_SORT);
+  assert.deepEqual(parseMemberFilters({ tri: "telephone" }).sort, DEFAULT_MEMBER_SORT);
+  assert.deepEqual(parseMemberFilters({ tri: "constructor", ordre: "desc" }).sort, DEFAULT_MEMBER_SORT);
+  assert.deepEqual(parseMemberFilters({ tri: "__proto__" }).sort, DEFAULT_MEMBER_SORT);
+});
+
+test("adresse du tri : omis par défaut, présent sinon, aller-retour", () => {
+  assert.equal(buildMembersQuery(f({ sort: DEFAULT_MEMBER_SORT })), "");
+  assert.equal(buildMembersQuery(f({ sort: { key: "endDate", direction: "desc" } })), "?tri=fin&ordre=desc");
+  assert.equal(
+    buildMembersQuery(f({ status: "ACTIVE", activity: "Danse", sort: { key: "status", direction: "asc" } }), 2),
+    "?statut=actifs&activite=Danse&tri=statut&ordre=asc&page=2",
+  );
+  const filters = f({ q: "ama", coach: "Mme Dede", sort: { key: "endDate", direction: "desc" } });
+  const params = Object.fromEntries(new URLSearchParams(buildMembersQuery(filters)));
+  assert.deepEqual(parseMemberFilters(params), filters);
+});
+
+test("clic sur un en-tête : croissant, puis décroissant, puis ordre par défaut", () => {
+  const a = nextMemberSort(DEFAULT_MEMBER_SORT, "endDate");
+  assert.deepEqual(a, { key: "endDate", direction: "asc" });
+  const b = nextMemberSort(a, "endDate");
+  assert.deepEqual(b, { key: "endDate", direction: "desc" });
+  assert.deepEqual(nextMemberSort(b, "endDate"), DEFAULT_MEMBER_SORT);
+  // Une autre colonne repart en croissant.
+  assert.deepEqual(nextMemberSort(b, "status"), { key: "status", direction: "asc" });
+});
+
+test("tri par nom : nom puis prénom, sans tenir compte des accents", () => {
+  // Adjo, Agbé, Kofi, Mensah, Zorro
+  assert.deepEqual(trier("name", "asc"), ["4", "3", "2", "1", "5"]);
+  assert.deepEqual(trier("name", "desc"), ["5", "1", "2", "3", "4"]);
+});
+
+test("tri par statut : l'urgence d'abord (expire bientôt, actif, en attente, expiré)", () => {
+  // 4 expire bientôt ; 1 et 5 actifs (départagés par le nom : Mensah < Zorro) ; 3 en attente ; 2 expiré
+  assert.deepEqual(trier("status", "asc"), ["4", "1", "5", "3", "2"]);
+  // Décroissant : on inverse le critère, pas le départage (1 reste avant 5).
+  assert.deepEqual(trier("status", "desc"), ["2", "3", "1", "5", "4"]);
+});
+
+test("tri par fin : les membres sans date restent à la fin dans les deux sens", () => {
+  // Dates : 2 (20/09) < 4 (09/10) < 1 (14/11) ; sans date : 3 (Agbé) puis 5 (Zorro)
+  assert.deepEqual(trier("endDate", "asc"), ["2", "4", "1", "3", "5"]);
+  assert.deepEqual(trier("endDate", "desc"), ["1", "4", "2", "3", "5"]);
+});
+
+test("tri : égalité totale départagée par l'identifiant, ordre toujours identique", () => {
+  const jumeaux = [
+    sm("b", "Ama", "Kofi", "ACTIVE", null),
+    sm("a", "Ama", "Kofi", "ACTIVE", null),
+  ];
+  const ordre = (x) => ids(sortMembers(x, { key: "endDate", direction: "asc" }, (y) => y.status));
+  assert.deepEqual(ordre(jumeaux), ["a", "b"]);
+  assert.deepEqual(ordre([...jumeaux].reverse()), ["a", "b"]);
+});
+
+test("tri : ne modifie pas la liste d'origine", () => {
+  const copie = [...liste];
+  sortMembers(liste, { key: "endDate", direction: "desc" }, statutAffiche);
+  assert.deepEqual(ids(liste), ids(copie));
 });

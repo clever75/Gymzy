@@ -12,3 +12,4 @@ Quand une question reçoit sa réponse : on note la réponse ici, puis on la tra
 | 5 | Police, couleurs d'erreur et d'avertissement, gris du texte secondaire : quelles valeurs retenir ? | Maître de stage ou développeur mobile | 17 nov. 2026 | | Ouverte |
 | 6 | Comment et où afficher le logo de la salle ? | Maître de stage | 17 nov. 2026 | | Ouverte |
 | 7 | Décision 0001 : compléter la partie « Pourquoi » avec ce que le maître de stage a dit. | Clever | 17 nov. 2026 | | Ouverte |
+| 8 | Tri de la liste des membres : quelles colonnes doivent être triables, et quel ordre par défaut ? Le cahier dit seulement « tri » (USR-03). Le code trie par Membre, Statut (urgence d'abord) et Fin, et par défaut par nom croissant. | Maître de stage | 18 nov. 2026 | Choix provisoire : ceux du code. | Tranchée provisoirement |

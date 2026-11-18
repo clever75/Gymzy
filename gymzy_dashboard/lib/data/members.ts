@@ -1,7 +1,7 @@
 // Couche d'accès aux données des membres (ADR 0002).
 // Les pages et les routes passent par ici : elles ne lisent jamais lib/mock directement.
 // Aujourd'hui les données sont factices ; au branchement de l'API, seul ce fichier change.
-import { filterMembers, listMemberFilterOptions } from "@/lib/member-filters";
+import { filterMembers, listMemberFilterOptions, sortMembers } from "@/lib/member-filters";
 import type { MemberFilterOptions, MemberFilters } from "@/lib/member-filters";
 import { getDisplayStatus } from "@/lib/member-status";
 import type { DisplayStatus } from "@/lib/member-status";
@@ -24,8 +24,10 @@ function withStatus(member: Member, now: Date): MemberWithStatus {
 /** Liste filtrée et paginée. Le filtre et la page sont des paramètres, comme pour l'API. */
 export async function listMembers(filters: MemberFilters, page: number): Promise<MembersPage> {
   const now = getNow();
-  const filtered = filterMembers(mockMembers, filters, (m) => getDisplayStatus(m, now));
-  const result = paginate(filtered, page);
+  const getStatus = (m: Member) => getDisplayStatus(m, now);
+  // Ordre : filtrer, puis trier, puis découper en pages (jamais trier la seule page affichée).
+  const sorted = sortMembers(filterMembers(mockMembers, filters, getStatus), filters.sort, getStatus);
+  const result = paginate(sorted, page);
   return {
     ...result,
     items: result.items.map((m) => withStatus(m, now)),
@@ -36,8 +38,10 @@ export async function listMembers(filters: MemberFilters, page: number): Promise
 /** Tous les membres filtrés, sans pagination : pour l'export CSV. */
 export async function listMembersForExport(filters: MemberFilters): Promise<MemberWithStatus[]> {
   const now = getNow();
-  return filterMembers(mockMembers, filters, (m) => getDisplayStatus(m, now)).map((m) =>
-    withStatus(m, now),
+  const getStatus = (m: Member) => getDisplayStatus(m, now);
+  // Même ordre que la liste affichée.
+  return sortMembers(filterMembers(mockMembers, filters, getStatus), filters.sort, getStatus).map(
+    (m) => withStatus(m, now),
   );
 }
 

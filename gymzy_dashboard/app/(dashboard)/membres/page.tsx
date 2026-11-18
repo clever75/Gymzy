@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ExportMembersButton } from "@/components/members/export-members-button";
 import { MembersFilters } from "@/components/members/members-filters";
+import { SortableHead } from "@/components/members/sortable-head";
 import { getMemberFilterOptions, listMembers } from "@/lib/data/members";
 import { formatDate } from "@/lib/format";
 import { memberStatusLabels } from "@/lib/labels";
@@ -68,11 +69,11 @@ export default async function MembersPage({
         <Table aria-label="Liste des membres">
           <TableHeader>
             <TableRow>
-              <TableHead>Membre</TableHead>
+              <SortableHead label="Membre" sortKey="name" filters={filters} />
               <TableHead>Téléphone</TableHead>
               <TableHead>Activité · Formule</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Fin</TableHead>
+              <SortableHead label="Statut" sortKey="status" filters={filters} />
+              <SortableHead label="Fin" sortKey="endDate" filters={filters} />
               <TableHead>Coach</TableHead>
             </TableRow>
           </TableHeader>
