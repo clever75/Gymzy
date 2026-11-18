@@ -25,6 +25,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 ### Modifié
 
 - Membres : la page, l'export et la fiche passent par une couche d'accès aux données (`lib/data/members.ts`), sans changement d'affichage (#21)
+- Membres : filtres par activité, formule et coach (listes déroulantes, export CSV inclus) (#23)
 
 ### Corrigé
 
