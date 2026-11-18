@@ -27,6 +27,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Membres : la page, l'export et la fiche passent par une couche d'accès aux données (`lib/data/members.ts`), sans changement d'affichage (#21)
 - Membres : filtres par activité, formule et coach (listes déroulantes, export CSV inclus) (#23)
 - Membres : tri des colonnes Membre, Statut et Fin, export CSV dans le même ordre (#24)
+- Membres : export Excel (.xlsx) avec les mêmes filtres et le même tri que le CSV, nouvelle dépendance `write-excel-file` (#25)
 
 ### Corrigé
 
