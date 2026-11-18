@@ -9,10 +9,10 @@ import {
   paymentStatusLabels,
   paymentTypeLabels,
 } from "@/lib/labels";
+import { listPaymentsForExport } from "@/lib/data/payments";
 import { getNow } from "@/lib/mock/clock";
-import { mockPayments } from "@/lib/mock/payments";
 import { PAYMENT_EXPORT_HEADERS, paymentsToCsvRows } from "@/lib/payment-export";
-import { filterPayments, parsePaymentFilters } from "@/lib/payment-filters";
+import { parsePaymentFilters } from "@/lib/payment-filters";
 import { canExportPayments } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
 
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
   const filters = parsePaymentFilters(
     Object.fromEntries(request.nextUrl.searchParams),
   );
-  const now = getNow();
-  const payments = filterPayments(mockPayments, filters, now);
+  const payments = await listPaymentsForExport(filters);
 
   // 3. Les vrais libellés et formats, injectés dans la fonction pure.
   const rows = paymentsToCsvRows(payments, {
@@ -47,7 +46,7 @@ export async function GET(request: NextRequest) {
 
   // 4. Nom de fichier fabriqué par nous (date seulement), jamais à partir
   //    de ce que l'utilisateur tape dans l'adresse.
-  const filename = `paiements-${now.toISOString().slice(0, 10)}.csv`;
+  const filename = `paiements-${getNow().toISOString().slice(0, 10)}.csv`;
 
   return new Response(csv, {
     headers: {
