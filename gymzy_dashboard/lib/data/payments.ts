@@ -5,7 +5,12 @@ import { getNow } from "@/lib/mock/clock";
 import { mockPayments } from "@/lib/mock/payments";
 import { paginate } from "@/lib/paginate";
 import type { Page } from "@/lib/paginate";
-import { computePaymentTotals, filterPayments, listCollectors } from "@/lib/payment-filters";
+import {
+  computePaymentTotals,
+  filterPayments,
+  listCollectors,
+  sortPayments,
+} from "@/lib/payment-filters";
 import type { PaymentFilters, PaymentTotals } from "@/lib/payment-filters";
 import type { Payment } from "@/lib/types";
 
@@ -16,12 +21,13 @@ export type PaymentsPage = Page<Payment> & { totals: PaymentTotals };
 export async function listPayments(filters: PaymentFilters, page: number): Promise<PaymentsPage> {
   // Une seule liste filtrée alimente le tableau ET les totaux : ils ne peuvent pas diverger.
   const filtered = filterPayments(mockPayments, filters, getNow());
-  return { ...paginate(filtered, page), totals: computePaymentTotals(filtered) };
+  // Le tri se fait AVANT la découpe en pages (sinon la page 2 serait fausse) ; il ne change pas les totaux.
+  return { ...paginate(sortPayments(filtered, filters.sort), page), totals: computePaymentTotals(filtered) };
 }
 
 /** Tous les paiements filtrés, sans pagination : pour l'export. */
 export async function listPaymentsForExport(filters: PaymentFilters): Promise<Payment[]> {
-  return filterPayments(mockPayments, filters, getNow());
+  return sortPayments(filterPayments(mockPayments, filters, getNow()), filters.sort);
 }
 
 /** Noms des encaisseurs de toute la salle, pour la liste déroulante (pas seulement la page). */
