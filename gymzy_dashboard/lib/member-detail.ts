@@ -37,6 +37,12 @@ export function buildMemberTabHref(memberId: string, tab: MemberTab): string {
   return tab === DEFAULT_MEMBER_TAB ? base : `${base}?onglet=${tab}`;
 }
 
+/** Adresse d'une page de l'onglet « Paiements ». La page 1 reste propre (pas de `&page=1`). */
+export function buildMemberPaymentsHref(memberId: string, page: number): string {
+  const base = buildMemberTabHref(memberId, "paiements");
+  return page > 1 ? `${base}&page=${page}` : base;
+}
+
 /**
  * « 28 sept. → 28 oct. » : l'année n'apparaît que si la période change d'année.
  * Ex. « 28 déc. 2026 → 27 janv. 2027 ».

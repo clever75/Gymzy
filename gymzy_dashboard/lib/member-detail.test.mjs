@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   MEMBER_TABS,
+  buildMemberPaymentsHref,
   buildMemberTabHref,
   formatPeriodRange,
   memberTabLabels,
@@ -33,6 +34,16 @@ test("adresse d'un onglet : l'onglet par défaut reste propre", () => {
 
 test("adresse d'un onglet : l'identifiant est encodé", () => {
   assert.equal(buildMemberTabHref("a b/c", "famille"), "/membres/a%20b%2Fc?onglet=famille");
+});
+
+test("adresse d'une page de paiements : la page 1 reste propre", () => {
+  assert.equal(buildMemberPaymentsHref("mem-001", 1), "/membres/mem-001?onglet=paiements");
+  assert.equal(buildMemberPaymentsHref("mem-001", 0), "/membres/mem-001?onglet=paiements");
+});
+
+test("adresse d'une page de paiements : les pages suivantes ajoutent ?page", () => {
+  assert.equal(buildMemberPaymentsHref("mem-001", 2), "/membres/mem-001?onglet=paiements&page=2");
+  assert.equal(buildMemberPaymentsHref("a b", 3), "/membres/a%20b?onglet=paiements&page=3");
 });
 
 test("période dans la même année : sans année", () => {

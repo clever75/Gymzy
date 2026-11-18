@@ -2,15 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EllipsisVertical } from "lucide-react";
+import { MemberPaymentsTable } from "@/components/members/member-payments-table";
 import { MemberTabs } from "@/components/members/member-tabs";
 import { SubscriptionPeriodsTable } from "@/components/members/subscription-periods-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getMemberDetail } from "@/lib/data/members";
+import { listMemberPayments } from "@/lib/data/payments";
 import { formatDate, formatFcfa } from "@/lib/format";
 import { memberStatusLabels } from "@/lib/labels";
 import { formatMemberName, isChild } from "@/lib/member-display";
 import { memberTabLabels, parseMemberTab } from "@/lib/member-detail";
+import { parsePageParam } from "@/lib/paginate";
 
 export const metadata: Metadata = { title: "Fiche membre · Gymzy" };
 
@@ -30,8 +33,12 @@ export default async function MemberPage({
   const member = await getMemberDetail(id);
   if (!member) notFound();
 
-  const tab = parseMemberTab((await searchParams).onglet);
+  const query = await searchParams;
+  const tab = parseMemberTab(query.onglet);
   const status = memberStatusLabels[member.displayStatus];
+
+  // Les paiements ne sont lus que si l'onglet est ouvert : les autres onglets ne paient pas cet appel.
+  const payments = tab === "paiements" ? await listMemberPayments(member.id, parsePageParam(query.page)) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,6 +97,8 @@ export default async function MemberPage({
       <section aria-label={memberTabLabels[tab]}>
         {tab === "abonnements" ? (
           <SubscriptionPeriodsTable periods={member.periods} />
+        ) : payments ? (
+          <MemberPaymentsTable memberId={member.id} result={payments} />
         ) : (
           <p className="rounded-2xl border border-border bg-surface px-4 py-10 text-center text-foreground-muted">
             Onglet « {memberTabLabels[tab]} » à construire.
