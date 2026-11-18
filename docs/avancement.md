@@ -1,6 +1,6 @@
 # Avancement du dashboard web
 
-Mis à jour le 17 nov. 2026, d'après l'état de `main` après la PR #19.
+Mis à jour le 18 nov. 2026, d'après l'état de `main` après la PR #21.
 
 **États** : À faire · En cours · Fait (données factices) · Branché à l'API.
 Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API.
@@ -10,10 +10,10 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Écran | État | Ce qui manque |
 |---|---|---|
 | WEB-01 Tableau de bord | À faire | Page vide (placeholder) |
-| WEB-02 Membres | En cours (données factices) | Liste, recherche, puces de statut, pagination et export CSV (admin et staff) sont faits. Reste : filtres activité, formule et coach avec tri (USR-03), export Excel (DASH-03), couche d'accès aux données (ADR 0002), `phone` nullable pour les enfants (USR-02), branchement API |
+| WEB-02 Membres | En cours (données factices) | Liste, recherche, puces de statut, pagination et export CSV (admin et staff) sont faits. Un enfant n'a pas de téléphone propre (USR-02). La page, l'export et la fiche passent par la couche d'accès aux données (ADR 0002). Reste : filtres activité, formule et coach avec tri (USR-03), export Excel (DASH-03), branchement API |
 | WEB-03 Fiche membre | À faire | Page provisoire (le lien depuis la liste existe) |
 | WEB-04 Activités et formules | À faire | Page vide |
-| WEB-05 Paiements et recettes | Fait (données factices) | Tri des colonnes, export Excel (règle du cahier §8.2), confirmation des actions sensibles, branchement API |
+| WEB-05 Paiements et recettes | Fait (données factices) | Tri des colonnes, export Excel (règle du cahier §8.2), confirmation des actions sensibles, couche d'accès aux données (ADR 0002), branchement API |
 | WEB-06 Cartes et accès | À faire | Page vide, module `membershipCard` |
 | WEB-07 Média | À faire | Page vide, module `media` |
 | WEB-08 Événements | À faire | Page vide, module `ticketing` |
@@ -28,8 +28,8 @@ Un écran n'est « Branché » que lorsqu'il lit et écrit réellement via l'API
 | Menu par rôle et modules actifs | Fait (données factices) | Masque seulement les liens : la vraie protection sera côté API |
 | Identité de la salle (nom, couleur) | Fait (données factices) | Le logo n'est pas encore affiché |
 | Connexion (AUTH-05) | À faire | La session actuelle est factice (`lib/session.ts`) |
-| Couche d'accès aux données | À faire | Voir ADR 0002. WEB-05 lit encore les données factices directement. |
+| Couche d'accès aux données | En cours | Faite pour les membres (`lib/data/members.ts`). WEB-05 lit encore les données factices directement : à reprendre dans une PR à part. |
 | Branchement à l'API | À faire | Après la couche d'accès aux données |
-| Tests | En cours | 42 tests de logique pure. Pas de tests de composants ni de bout en bout. |
+| Tests | En cours | 44 tests de logique pure. La couche d'accès n'est pas testée directement. Pas de tests de composants ni de bout en bout. |
 | Accessibilité | À auditer | Contrastes, clavier, libellés |
 | Utilisable dès 768 px | À vérifier | Conçu pour 1280 px et plus |
