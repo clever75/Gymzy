@@ -70,3 +70,25 @@ Le carnet de bord officiel du stage reste le document de l'école : on peut reco
 - **Ce qu'on a fait :** réglage GitHub activé, la fusion par squash est possible.
 - **À quoi ça sert :** le titre de la PR devient le message du commit sur `main`, ce qui garde un historique lisible (une PR = un commit).
 - **Ce que j'ai appris :** à compléter.
+
+### 17-18 nov. 2026 · Téléphone facultatif et couche d'accès aux données des membres (#20, #21, #22)
+
+- **Ce qu'on a fait :** le téléphone d'un membre devient facultatif (un enfant n'a pas de numéro propre, USR-02), puis la liste, l'export et la fiche des membres passent par `lib/data/members.ts` au lieu de lire les données factices directement (ADR 0002). L'avancement est mis à jour.
+- **À quoi ça sert :** quand l'API sera branchée, seul `lib/data/members.ts` changera, pas les écrans. Un type juste (`string | null`) fait signaler par TypeScript tous les endroits à corriger.
+- **Ce que j'ai appris :** à compléter. (Pistes : corriger la donnée avant la structure ; une « couche d'accès » est une porte unique entre les pages et la source de données ; la couche de données ne s'invente pas : le filtre, le tri et la page sont des paramètres, comme pour l'API.)
+- **Reste à faire :** la même couche pour les paiements.
+
+### 18 nov. 2026 · Liste des membres complétée : filtres, tri, export Excel (#23, #24, #25)
+
+- **Ce qu'on a fait :** filtres par activité, formule et coach (listes déroulantes alimentées par la couche de données), tri des colonnes Membre, Statut et Fin, et export Excel (`.xlsx`) avec les mêmes filtres et le même tri que le CSV. Nouvelle dépendance `write-excel-file`, choisie après comparaison (ADR 0003). Deux questions ouvertes ajoutées : colonnes triables et ordre par défaut (n° 8).
+- **À quoi ça sert :** couvrir USR-03 (recherche, filtres, tri, pagination) et DASH-03 (export CSV et Excel) pour les membres. Dans le fichier Excel, les dates sont de vraies dates et un texte qui commence par « = » reste un texte (jamais une formule).
+- **Ce que j'ai appris :** à compléter. (Pistes : le cahier dit « tri » sans préciser les colonnes : on fait le minimum et on note les choix en question ouverte ; un tri doit être stable (départage par nom puis identifiant) et se faire avant la pagination ; avant d'ajouter une dépendance, on compare taille, licence, maintenance et failles connues ; un test peut rouvrir le `.xlsx` produit, qui est un zip de fichiers XML.)
+- **Reste à faire :** WEB-02 est terminée côté interface ; reste le branchement à l'API.
+
+### 18 nov. 2026 · Journal des paiements : couche de données, maquette, tri (#26, #27, #28)
+
+- **Ce qu'on a fait :** la page et l'export des paiements passent par `lib/data/payments.ts` (#26). Le journal est aligné sur la maquette WEB-05 (#27) : colonnes Réduction et Reçu, totaux espèces, mobile money, carte et réductions, boutons « PDF » et « Relancer » désactivés avant l'API. Les colonnes Date, Membre et Montant se trient, du plus récent au plus ancien par défaut (#28), avec un composant d'en-tête triable commun aux membres et aux paiements.
+- **À quoi ça sert :** la page respecte la maquette et les exigences PAY-09 et PAY-10 du cahier, et les deux listes se comportent pareil. Les boutons désactivés montrent ce qui dépend de l'API sans faire croire que ça marche.
+- **Ce que j'ai appris :** à compléter. (Pistes : comparer un écran à la maquette et au texte du cahier, qui peuvent dire des choses différentes ; vérifier la mise en page avec une capture à 1280 px, car un test ne voit pas une colonne coupée ; pour une colonne qui a déjà un ordre par défaut, le cycle des clics doit en tenir compte.)
+- **Reste à faire :** export Excel des paiements, choix de dates « Période… », filtre par formule, confirmation des actions sensibles, branchement à l'API. Questions ouvertes n° 9 (colonne « Reçu ») et n° 10 (colonnes triables).
+
