@@ -64,10 +64,10 @@ export function MembersFilters({
   return (
     <div className="flex flex-col gap-4">
       {/* Un seul formulaire GET : recherche et listes déroulantes partent ensemble
-          (Entrée fonctionne). Seul le statut, qui est une puce, est recopié en champ caché. */}
+          (Entrée fonctionne). Le statut (puce) et le tri (en-têtes) sont recopiés en champs cachés. */}
       <form action="/membres" method="get" role="search" className="flex flex-col gap-3">
         {activeMemberFilterParams(filters)
-          .filter(([name]) => name === "statut")
+          .filter(([name]) => name === "statut" || name === "tri" || name === "ordre")
           .map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />
           ))}
