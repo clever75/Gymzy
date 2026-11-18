@@ -31,6 +31,26 @@ const TYPES = [
   ["billet", "EVENT_TICKET"],
 ] as const;
 
+// ── Tri ─────────────────────────────────────────────────────────────────
+// Colonnes triables : [texte dans l'URL, clé]. Tableaux et non objets, comme STATUSES.
+// Le cahier dit seulement « tri » (PAY-09, §9) : colonnes et ordre par défaut sont notre choix
+// (question ouverte).
+const SORT_KEYS = [
+  ["date", "createdAt"],
+  ["membre", "memberName"],
+  ["montant", "amountFinal"],
+] as const;
+export type PaymentSortKey = (typeof SORT_KEYS)[number][1];
+export type SortDirection = "asc" | "desc";
+
+export interface PaymentSort {
+  key: PaymentSortKey;
+  direction: SortDirection;
+}
+
+// Un journal se lit du plus récent au plus ancien.
+export const DEFAULT_PAYMENT_SORT: PaymentSort = { key: "createdAt", direction: "desc" };
+
 export interface PaymentFilters {
   period: Period;
   method: PaymentMethod | null;
@@ -40,6 +60,7 @@ export interface PaymentFilters {
   // des personnes dépend de la salle, elle n'est pas figée dans le code.
   collector: string | null;
   q: string;
+  sort: PaymentSort; // le tri voyage avec les filtres : même adresse, même fonction de lecture
 }
 
 export const DEFAULT_PAYMENT_FILTERS: PaymentFilters = {
@@ -49,6 +70,7 @@ export const DEFAULT_PAYMENT_FILTERS: PaymentFilters = {
   type: null,
   collector: null,
   q: "",
+  sort: DEFAULT_PAYMENT_SORT,
 };
 
 const MAX_QUERY_LENGTH = 60;
@@ -57,6 +79,35 @@ type SearchParams = Record<string, string | string[] | undefined>;
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+// Lit « ?tri=…&ordre=… ». Une valeur inconnue donne l'ordre par défaut.
+function parsePaymentSort(params: SearchParams): PaymentSort {
+  const rawKey = firstValue(params.tri);
+  const key = SORT_KEYS.find(([slug]) => slug === rawKey)?.[1];
+  if (!key) return DEFAULT_PAYMENT_SORT;
+  return { key, direction: firstValue(params.ordre) === "desc" ? "desc" : "asc" };
+}
+
+function samePaymentSort(a: PaymentSort, b: PaymentSort): boolean {
+  return a.key === b.key && a.direction === b.direction;
+}
+
+// Sens du premier clic sur une colonne : la date commence par le plus récent
+// (c'est déjà l'ordre par défaut), les autres colonnes par « croissant ».
+const FIRST_DIRECTION: Record<PaymentSortKey, SortDirection> = {
+  createdAt: "desc",
+  memberName: "asc",
+  amountFinal: "asc",
+};
+
+// Tri à appliquer quand on clique sur l'en-tête d'une colonne :
+// autre colonne -> son premier sens ; premier sens -> sens inverse ; sens inverse -> ordre par défaut.
+export function nextPaymentSort(current: PaymentSort, key: PaymentSortKey): PaymentSort {
+  const first = FIRST_DIRECTION[key];
+  if (current.key !== key) return { key, direction: first };
+  if (current.direction === first) return { key, direction: first === "asc" ? "desc" : "asc" };
+  return DEFAULT_PAYMENT_SORT;
 }
 
 // Lit les filtres dans l'adresse. Toute valeur inconnue donne la valeur par défaut.
@@ -75,6 +126,7 @@ export function parsePaymentFilters(params: SearchParams): PaymentFilters {
     type: TYPES.find(([slug]) => slug === rawType)?.[1] ?? null,
     collector: rawCollector === "" ? null : rawCollector,
     q: (firstValue(params.q) ?? "").trim().slice(0, MAX_QUERY_LENGTH),
+    sort: parsePaymentSort(params),
   };
 }
 
@@ -93,6 +145,13 @@ export function activeFilterParams(filters: PaymentFilters): [string, string][] 
   const type = TYPES.find(([, value]) => value === filters.type)?.[0];
   if (type) entries.push(["type", type]);
   if (filters.collector) entries.push(["encaisse", filters.collector]);
+  if (!samePaymentSort(filters.sort, DEFAULT_PAYMENT_SORT)) {
+    const slug = SORT_KEYS.find(([, key]) => key === filters.sort.key)?.[0];
+    if (slug) {
+      entries.push(["tri", slug]);
+      entries.push(["ordre", filters.sort.direction]);
+    }
+  }
   return entries;
 }
 
@@ -163,6 +222,36 @@ export function filterPayments(payments: Payment[], filters: PaymentFilters, now
       (filters.collector === null || p.confirmedBy === filters.collector) &&
       (query === "" || normalizeText(p.memberName).includes(query)),
   );
+}
+
+function compareText(a: string, b: string): number {
+  return a.localeCompare(b, "fr", { sensitivity: "base" });
+}
+
+// Plus récent d'abord ; à égalité, l'identifiant : l'ordre est toujours le même.
+function compareNewestFirst(a: Payment, b: Payment): number {
+  return (
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
+    compareText(a.id, b.id)
+  );
+}
+
+// Trie une copie de la liste. À égalité, la date (récent d'abord) puis l'identifiant départagent :
+// l'ordre est toujours le même, donc la pagination ne mélange pas les pages.
+// Le sens « décroissant » inverse le critère choisi, pas le départage.
+export function sortPayments(payments: Payment[], sort: PaymentSort): Payment[] {
+  const sign = sort.direction === "desc" ? -1 : 1;
+  const primary = (a: Payment, b: Payment): number => {
+    switch (sort.key) {
+      case "createdAt":
+        return sign * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      case "memberName":
+        return sign * compareText(a.memberName, b.memberName);
+      case "amountFinal":
+        return sign * (a.amountFinal - b.amountFinal);
+    }
+  };
+  return [...payments].sort((a, b) => primary(a, b) || compareNewestFirst(a, b));
 }
 
 // Noms d'encaisseurs distincts, triés (pour la liste déroulante).

@@ -4,13 +4,16 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_PAYMENT_FILTERS as DEFAULTS,
+  DEFAULT_PAYMENT_SORT,
   activeFilterParams,
   buildPaymentsQuery,
   computePaymentTotals,
   filterPayments,
   listCollectors,
+  nextPaymentSort,
   parsePaymentFilters,
   periodRange,
+  sortPayments,
 } from "./payment-filters.ts";
 
 const NOW = new Date("2026-10-05T12:00:00Z");
@@ -45,7 +48,10 @@ test("lecture des filtres : valeurs valides", () => {
       periode: "7j", mode: "carte", statut: "payes",
       type: "seance", encaisse: "  Akua  ", q: "  ama  ",
     }),
-    { period: "7j", method: "CARD", status: "COMPLETED", type: "PER_SESSION", collector: "Akua", q: "ama" },
+    {
+      period: "7j", method: "CARD", status: "COMPLETED", type: "PER_SESSION",
+      collector: "Akua", q: "ama", sort: DEFAULT_PAYMENT_SORT,
+    },
   );
 });
 
@@ -90,6 +96,7 @@ test("aller-retour : lire(construire(filtres)) redonne les mêmes filtres", () =
   const f = {
     period: "jour", method: "MOBILE_MONEY", status: "PENDING",
     type: "PER_SESSION", collector: "Élom Kossi", q: "yao",
+    sort: { key: "amountFinal", direction: "desc" },
   };
   const params = Object.fromEntries(new URLSearchParams(buildPaymentsQuery(f)));
   assert.deepEqual(parsePaymentFilters(params), f);
@@ -153,4 +160,79 @@ test("totaux : suivent la liste filtrée", () => {
     computePaymentTotals(run({ period: "tout", status: "PENDING" })),
     { collected: 0, cash: 0, mobileMoney: 0, card: 0, discounts: 0 },
   );
+});
+
+// ── Tri ─────────────────────────────────────────────────────────────────
+const sorted = (sort) => sortPayments(DATA, sort).map((p) => p.id).join(",");
+
+test("tri : par défaut, du plus récent au plus ancien", () => {
+  assert.deepEqual(DEFAULT_PAYMENT_SORT, { key: "createdAt", direction: "desc" });
+  assert.equal(sorted(DEFAULT_PAYMENT_SORT), "1,2,3,7,4,5,6,8");
+  assert.equal(sorted({ key: "createdAt", direction: "asc" }), "8,6,5,4,7,3,2,1");
+});
+
+test("tri : par membre (sans accent ni majuscule), par montant", () => {
+  // Noms affichés (prénom d'abord) : Ama, Efua, Éva, Hors, Mawuli, Mawusi, Test, Yao
+  assert.equal(sorted({ key: "memberName", direction: "asc" }), "1,2,6,8,5,4,7,3");
+  assert.equal(sorted({ key: "memberName", direction: "desc" }), "3,7,4,5,8,6,2,1");
+  // montants payés : 1 = 12 000 ; 7 = 1 000 ; 8 = 5 000 ; les autres 15 000, 20 000, 50 000
+  assert.equal(sorted({ key: "amountFinal", direction: "asc" }), "7,8,1,2,3,4,5,6");
+  assert.equal(sorted({ key: "amountFinal", direction: "desc" }), "6,5,2,3,4,1,8,7");
+});
+
+test("tri : à égalité, le plus récent d'abord, puis l'identifiant (pages stables)", () => {
+  // 2, 3 et 4 valent 15 000 : du plus récent (2) au plus ancien (4), dans les deux sens
+  const asc = sorted({ key: "amountFinal", direction: "asc" }).split(",");
+  const desc = sorted({ key: "amountFinal", direction: "desc" }).split(",");
+  assert.deepEqual(asc.filter((id) => ["2", "3", "4"].includes(id)), ["2", "3", "4"]);
+  assert.deepEqual(desc.filter((id) => ["2", "3", "4"].includes(id)), ["2", "3", "4"]);
+  const same = [pay("b", "2026-10-01T10:00:00Z", "X", "CASH", "COMPLETED", 1000),
+                pay("a", "2026-10-01T10:00:00Z", "X", "CASH", "COMPLETED", 1000)];
+  assert.equal(sortPayments(same, DEFAULT_PAYMENT_SORT).map((p) => p.id).join(","), "a,b");
+});
+
+test("tri : la liste d'origine n'est pas modifiée", () => {
+  const before = ids(DATA);
+  sortPayments(DATA, { key: "memberName", direction: "asc" });
+  assert.equal(ids(DATA), before);
+});
+
+test("tri : un clic sur une colonne fait défiler premier sens, sens inverse, ordre par défaut", () => {
+  // Membre : croissant, décroissant, retour au défaut
+  let sort = nextPaymentSort(DEFAULT_PAYMENT_SORT, "memberName");
+  assert.deepEqual(sort, { key: "memberName", direction: "asc" });
+  sort = nextPaymentSort(sort, "memberName");
+  assert.deepEqual(sort, { key: "memberName", direction: "desc" });
+  assert.deepEqual(nextPaymentSort(sort, "memberName"), DEFAULT_PAYMENT_SORT);
+  // Date : l'ordre par défaut est déjà « récent d'abord » -> le clic donne « ancien d'abord », puis revient
+  sort = nextPaymentSort(DEFAULT_PAYMENT_SORT, "createdAt");
+  assert.deepEqual(sort, { key: "createdAt", direction: "asc" });
+  assert.deepEqual(nextPaymentSort(sort, "createdAt"), DEFAULT_PAYMENT_SORT);
+  // Depuis une autre colonne, la date repart de son premier sens (= le défaut)
+  assert.deepEqual(nextPaymentSort({ key: "amountFinal", direction: "asc" }, "createdAt"), DEFAULT_PAYMENT_SORT);
+});
+
+test("tri : lecture et construction de l'adresse, valeur inconnue = défaut", () => {
+  assert.deepEqual(parsePaymentFilters({ tri: "montant", ordre: "desc" }).sort, { key: "amountFinal", direction: "desc" });
+  assert.deepEqual(parsePaymentFilters({ tri: "membre" }).sort, { key: "memberName", direction: "asc" });
+  assert.deepEqual(parsePaymentFilters({ tri: "date", ordre: "zzz" }).sort, { key: "createdAt", direction: "asc" });
+  for (const tri of ["constructor", "__proto__", "phone", "", "montant "]) {
+    assert.deepEqual(parsePaymentFilters({ tri }).sort, DEFAULT_PAYMENT_SORT, JSON.stringify(tri));
+  }
+  assert.deepEqual(parsePaymentFilters({ tri: ["membre", "date"] }).sort, { key: "memberName", direction: "asc" });
+  assert.equal(buildPaymentsQuery(DEFAULTS), ""); // le tri par défaut n'apparaît pas
+  assert.equal(
+    buildPaymentsQuery({ ...DEFAULTS, period: "tout", sort: { key: "amountFinal", direction: "desc" } }),
+    "?periode=tout&tri=montant&ordre=desc",
+  );
+  assert.deepEqual(
+    activeFilterParams({ ...DEFAULTS, sort: { key: "memberName", direction: "asc" } }),
+    [["tri", "membre"], ["ordre", "asc"]],
+  );
+});
+
+test("tri : les totaux ne changent pas avec le tri (ils portent sur la liste filtrée)", () => {
+  const filtered = filterPayments(DATA, { ...DEFAULTS, period: "tout" }, NOW);
+  const totals = computePaymentTotals(filtered);
+  assert.deepEqual(computePaymentTotals(sortPayments(filtered, { key: "amountFinal", direction: "asc" })), totals);
 });

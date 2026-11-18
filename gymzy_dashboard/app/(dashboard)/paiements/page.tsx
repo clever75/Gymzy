@@ -24,6 +24,7 @@ import { parsePageParam } from "@/lib/paginate";
 import { buildPaymentsQuery, parsePaymentFilters } from "@/lib/payment-filters";
 import { PaymentsFilters } from "@/components/payments/payments-filters";
 import { ReceiptCell } from "@/components/payments/receipt-cell";
+import { SortableHead } from "@/components/payments/sortable-head";
 import { ExportPaymentsButton } from "@/components/payments/export-payments-button";
 import { canExportPayments } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
@@ -83,10 +84,15 @@ export default async function PaymentsPage({
         <Table aria-label="Journal des paiements" className="[&_td]:px-3 [&_th]:px-3">
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Membre</TableHead>
+              <SortableHead label="Date" sortKey="createdAt" filters={filters} />
+              <SortableHead label="Membre" sortKey="memberName" filters={filters} />
               <TableHead>Type</TableHead>
-              <TableHead className="text-right">Montant</TableHead>
+              <SortableHead
+                label="Montant"
+                sortKey="amountFinal"
+                filters={filters}
+                className="text-right"
+              />
               <TableHead className="text-right">Réduction</TableHead>
               <TableHead>Mode</TableHead>
               <TableHead>Encaisseur</TableHead>
