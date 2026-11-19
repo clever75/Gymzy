@@ -15,7 +15,8 @@ export interface Member {
   firstName: string;
   lastName: string;
   phone: string | null;        // null pour un enfant : il n'a pas de numéro propre (USR-02)
-  guardianName: string | null; // renseigné pour un enfant (User.guardianId)
+  guardianId: string | null;   // identifiant du parent (User.guardianId) ; sert à retrouver la famille (FAM-01)
+  guardianName: string | null; // nom affiché du parent, renseigné pour un enfant ; doit correspondre à guardianId
   coachName: string | null;    // coach référent, null si aucun (colonne « Coach » de WEB-02)
   activity: string;            // ex. "Musculation"
   formula: string;             // ex. "Mensuel"
