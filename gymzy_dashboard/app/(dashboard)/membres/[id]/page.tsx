@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EllipsisVertical } from "lucide-react";
+import { MemberFamilyTable } from "@/components/members/member-family-table";
 import { MemberPaymentsTable } from "@/components/members/member-payments-table";
 import { MemberTabs } from "@/components/members/member-tabs";
 import { SubscriptionPeriodsTable } from "@/components/members/subscription-periods-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getMemberDetail } from "@/lib/data/members";
+import { getMemberDetail, getMemberFamily } from "@/lib/data/members";
 import { listMemberPayments } from "@/lib/data/payments";
 import { formatDate, formatFcfa } from "@/lib/format";
 import { memberStatusLabels } from "@/lib/labels";
@@ -37,8 +38,9 @@ export default async function MemberPage({
   const tab = parseMemberTab(query.onglet);
   const status = memberStatusLabels[member.displayStatus];
 
-  // Les paiements ne sont lus que si l'onglet est ouvert : les autres onglets ne paient pas cet appel.
+  // Les paiements et la famille ne sont lus que si leur onglet est ouvert : les autres onglets ne paient pas cet appel.
   const payments = tab === "paiements" ? await listMemberPayments(member.id, parsePageParam(query.page)) : null;
+  const family = tab === "famille" ? await getMemberFamily(member.id) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -99,6 +101,8 @@ export default async function MemberPage({
           <SubscriptionPeriodsTable periods={member.periods} />
         ) : payments ? (
           <MemberPaymentsTable memberId={member.id} result={payments} />
+        ) : family ? (
+          <MemberFamilyTable family={family} />
         ) : (
           <p className="rounded-2xl border border-border bg-surface px-4 py-10 text-center text-foreground-muted">
             Onglet « {memberTabLabels[tab]} » à construire.
