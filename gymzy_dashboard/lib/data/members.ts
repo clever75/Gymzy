@@ -3,6 +3,8 @@
 // Aujourd'hui les données sont factices ; au branchement de l'API, seul ce fichier change.
 import { filterMembers, listMemberFilterOptions, sortMembers } from "@/lib/member-filters";
 import type { MemberFilterOptions, MemberFilters } from "@/lib/member-filters";
+import { getFamily } from "@/lib/member-family";
+import type { Family } from "@/lib/member-family";
 import { getDisplayStatus } from "@/lib/member-status";
 import type { DisplayStatus } from "@/lib/member-status";
 import { getNow } from "@/lib/mock/clock";
@@ -20,6 +22,9 @@ export type MembersPage = Page<MemberWithStatus> & { totalAll: number };
 
 /** Une fiche complète avec son statut tel qu'il s'affiche. */
 export type MemberDetailWithStatus = MemberWithStatus & MemberDetailExtras;
+
+/** La famille d'un membre (FAM-01) : son parent s'il est enfant, ses enfants s'il est parent. */
+export type MemberFamily = Family<MemberWithStatus>;
 
 /** Membre sans entrée dans le mock : aucun prix convenu, pas de carte, pas d'historique. */
 const NO_EXTRAS: MemberDetailExtras = { agreedPrice: null, cardNumber: null, periods: [] };
@@ -68,4 +73,14 @@ export async function getMemberDetail(id: string): Promise<MemberDetailWithStatu
   const member = mockMembers.find((m) => m.id === id);
   if (!member) return null;
   return { ...withStatus(member, getNow()), ...(mockMemberDetails[id] ?? NO_EXTRAS) };
+}
+
+/** La famille d'un membre, avec le statut affiché de chaque personne. Jamais null : « pas de famille » est un cas normal. */
+export async function getMemberFamily(id: string): Promise<MemberFamily> {
+  const now = getNow();
+  const family = getFamily(id, mockMembers);
+  return {
+    guardian: family.guardian ? withStatus(family.guardian, now) : null,
+    children: family.children.map((m) => withStatus(m, now)),
+  };
 }
